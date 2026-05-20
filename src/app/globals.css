@@ -12,8 +12,15 @@
   --color-lf-navy-dark: #001a4d;
   --color-lf-gold: #c8960c;
   --color-lf-gold-dark: #a87a0a;
+  /* Ally-inspired marketing platform accent — used only inside (platform) routes. */
+  --color-lf-orange: #ff6b2c;
+  --color-lf-orange-dark: #e35314;
+  --color-lf-orange-soft: #fff1ea;
   --color-lf-light: #f5f7fa;
+  --color-lf-surface: #fafbfd;
   --color-lf-text: #1a1a2e;
+  --color-lf-muted: #6b7280;
+  --color-lf-border: #e5e7eb;
 }
 
 body {
