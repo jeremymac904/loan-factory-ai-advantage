@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -67,7 +67,10 @@ interface BuilderState {
   website: string;
   // Uploads (demo-mode: filenames only)
   profile_photo_filename: string | null;
+  /** Browser object URL for the uploaded headshot — lives only in this tab. */
+  profile_photo_preview_url: string | null;
   ai_reference_image_filename: string | null;
+  ai_reference_image_preview_url: string | null;
   /** Optional fallback URL when no upload is available. */
   headshot_url_fallback: string;
   persona_document_filename: string | null;
@@ -98,7 +101,9 @@ const EMPTY: BuilderState = {
   phone: '',
   website: '',
   profile_photo_filename: null,
+  profile_photo_preview_url: null,
   ai_reference_image_filename: null,
+  ai_reference_image_preview_url: null,
   headshot_url_fallback: '',
   persona_document_filename: null,
   brand_voice_document_filename: null,
@@ -152,6 +157,45 @@ export default function BuilderPage() {
   function setField<K extends keyof BuilderState>(key: K, value: BuilderState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
   }
+
+  /**
+   * Drop a fresh object URL onto a preview slot, revoking any previous URL
+   * so we don't leak. Browser object URLs live only for this tab — they are
+   * never persisted and never sent to a server.
+   */
+  function setPreviewUrl(
+    key: 'profile_photo_preview_url' | 'ai_reference_image_preview_url',
+    file: File | null,
+  ) {
+    setForm((f) => {
+      const prev = f[key];
+      if (prev) {
+        try {
+          URL.revokeObjectURL(prev);
+        } catch {
+          /* ignore */
+        }
+      }
+      const next = file ? URL.createObjectURL(file) : null;
+      return { ...f, [key]: next };
+    });
+  }
+
+  // Revoke any in-flight object URLs when the builder unmounts.
+  useEffect(() => {
+    return () => {
+      [form.profile_photo_preview_url, form.ai_reference_image_preview_url].forEach((u) => {
+        if (u) {
+          try {
+            URL.revokeObjectURL(u);
+          } catch {
+            /* ignore */
+          }
+        }
+      });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function toggleArr(key: 'languages' | 'specialties' | 'licensed_states', value: string) {
     setForm((f) => {
@@ -289,7 +333,9 @@ export default function BuilderPage() {
             />
           )}
 
-          {step === 2 && <InfoStep form={form} setField={setField} />}
+          {step === 2 && (
+            <InfoStep form={form} setField={setField} setPreviewUrl={setPreviewUrl} />
+          )}
 
           {step === 3 && (
             <StoryStep
@@ -356,15 +402,20 @@ export default function BuilderPage() {
             <div className="p-5">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-14 h-14 rounded-full overflow-hidden bg-[var(--color-lf-orange)] border-2 border-[var(--color-lf-orange)] shrink-0 flex items-center justify-center text-white font-black text-xl">
-                  {form.headshot_url_fallback ? (
+                  {form.profile_photo_preview_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={form.profile_photo_preview_url}
+                      alt="Uploaded headshot preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : form.headshot_url_fallback ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={form.headshot_url_fallback}
-                      alt="preview"
+                      alt="Headshot preview"
                       className="w-full h-full object-cover"
                     />
-                  ) : form.profile_photo_filename ? (
-                    <FileText size={20} />
                   ) : (
                     form.full_name?.[0] || '?'
                   )}
@@ -516,9 +567,14 @@ function TemplateStep({
 function InfoStep({
   form,
   setField,
+  setPreviewUrl,
 }: {
   form: BuilderState;
   setField: <K extends keyof BuilderState>(key: K, value: BuilderState[K]) => void;
+  setPreviewUrl: (
+    key: 'profile_photo_preview_url' | 'ai_reference_image_preview_url',
+    file: File | null,
+  ) => void;
 }) {
   return (
     <div className="space-y-6">
@@ -558,20 +614,28 @@ function InfoStep({
 
       {/* Uploads */}
       <div className="pt-2">
-        <h3 className="text-sm font-bold text-[var(--color-lf-black)] mb-1">Profile photo & AI reference image</h3>
+        <h3 className="text-sm font-bold text-[var(--color-lf-black)] mb-1">
+          Profile photo & AI reference image
+        </h3>
         <p className="text-xs text-[var(--color-lf-muted)] mb-4">
-          Reference images are for future AI-generated marketing visuals. Do not include borrower data
-          or private loan information in any upload.
+          Upload a professional headshot or paste an image URL below. Supabase Storage will be wired
+          in the production phase. Reference images are for future AI-generated marketing visuals —
+          do not include borrower data or private loan information in any upload.
         </p>
         <div className="grid sm:grid-cols-2 gap-4">
           <BuilderUpload
             title="Profile photo"
             bucket="profile-images"
             accept="image/*"
-            description="Your professional headshot."
+            description="Your professional headshot. Preview shows immediately on the right."
             existing={form.profile_photo_filename}
+            previewUrl={form.profile_photo_preview_url}
             onPick={(name) => setField('profile_photo_filename', name)}
-            onClear={() => setField('profile_photo_filename', null)}
+            onFile={(file) => setPreviewUrl('profile_photo_preview_url', file)}
+            onClear={() => {
+              setField('profile_photo_filename', null);
+              setPreviewUrl('profile_photo_preview_url', null);
+            }}
           />
           <BuilderUpload
             title="AI reference image"
@@ -579,13 +643,18 @@ function InfoStep({
             accept="image/*"
             description="A clear photo of you used to generate consistent marketing visuals."
             existing={form.ai_reference_image_filename}
+            previewUrl={form.ai_reference_image_preview_url}
             onPick={(name) => setField('ai_reference_image_filename', name)}
-            onClear={() => setField('ai_reference_image_filename', null)}
+            onFile={(file) => setPreviewUrl('ai_reference_image_preview_url', file)}
+            onClear={() => {
+              setField('ai_reference_image_filename', null);
+              setPreviewUrl('ai_reference_image_preview_url', null);
+            }}
           />
         </div>
         <div className="mt-4">
           <label className="block text-xs font-bold uppercase tracking-widest text-[var(--color-lf-muted)] mb-1.5">
-            Optional image URL fallback
+            Or paste image URL
           </label>
           <input
             type="url"
@@ -595,8 +664,8 @@ function InfoStep({
             className="w-full border border-[var(--color-lf-border)] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-lf-orange)]/30 focus:border-[var(--color-lf-orange)]"
           />
           <p className="text-[11px] text-[var(--color-lf-muted)] mt-1">
-            Use this if your headshot lives on another site. Marketing may replace it with the
-            uploaded photo before publish.
+            Use this if your headshot is already hosted elsewhere. The uploaded photo takes priority
+            in the preview if both are provided.
           </p>
         </div>
       </div>
@@ -1056,16 +1125,18 @@ function SummaryRow({ label, value }: { label: string; value: React.ReactNode })
   );
 }
 
-/* Builder-facing upload — wraps the shared UploadCard with onSelect / onClear
-   callbacks so the builder mirrors the chosen filename in its state and
-   live preview. */
+/* Builder-facing upload — wraps the shared UploadCard with onSelect / onFile /
+   onClear callbacks so the builder mirrors the chosen filename and a fresh
+   object-URL preview in its state. */
 function BuilderUpload({
   title,
   description,
   bucket,
   accept,
   existing,
+  previewUrl,
   onPick,
+  onFile,
   onClear,
 }: {
   title: string;
@@ -1073,19 +1144,37 @@ function BuilderUpload({
   bucket: import('@/lib/platform-types').UploadBucket;
   accept?: string;
   existing: string | null;
+  previewUrl?: string | null;
   onPick: (name: string) => void;
+  onFile?: (file: File) => void;
   onClear: () => void;
 }) {
   return (
-    <UploadCard
-      title={title}
-      description={description}
-      bucket={bucket}
-      accept={accept}
-      existingFileName={existing ?? undefined}
-      onSelect={onPick}
-      onClear={onClear}
-      helperText="Demo upload — file does not leave the browser. Will sync to Supabase Storage once wired."
-    />
+    <div>
+      {previewUrl && (
+        <div className="mb-2 flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={previewUrl}
+            alt="Upload preview"
+            className="w-12 h-12 rounded-lg object-cover border border-[var(--color-lf-border)]"
+          />
+          <span className="text-[11px] text-[var(--color-lf-muted)]">
+            Live preview ready. The published site will use this image after Marketing approval.
+          </span>
+        </div>
+      )}
+      <UploadCard
+        title={title}
+        description={description}
+        bucket={bucket}
+        accept={accept}
+        existingFileName={existing ?? undefined}
+        onSelect={onPick}
+        onFile={onFile}
+        onClear={onClear}
+        helperText="Demo upload — file does not leave the browser. Will sync to Supabase Storage once wired."
+      />
+    </div>
   );
 }

@@ -1,7 +1,10 @@
 'use client';
+
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
+import { AI_ADVANTAGE_LOGO } from '@/lib/brand-assets';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -11,6 +14,33 @@ const navLinks = [
   { href: '/admin', label: 'Admin' },
 ];
 
+function Logo() {
+  const [errored, setErrored] = useState(false);
+
+  if (errored) {
+    return (
+      <span className="text-[var(--color-lf-black)] font-black text-lg leading-tight tracking-tight">
+        LOAN FACTORY
+        <span className="block text-[var(--color-lf-orange)] text-[10px] font-bold tracking-[0.22em] mt-0.5">
+          AI ADVANTAGE
+        </span>
+      </span>
+    );
+  }
+
+  return (
+    <Image
+      src={AI_ADVANTAGE_LOGO}
+      alt="Loan Factory AI Advantage"
+      width={180}
+      height={40}
+      priority
+      onError={() => setErrored(true)}
+      className="h-9 w-auto object-contain"
+    />
+  );
+}
+
 export default function Header() {
   const [open, setOpen] = useState(false);
 
@@ -18,15 +48,14 @@ export default function Header() {
     <header className="bg-white border-b border-[var(--color-lf-border)] sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-[var(--color-lf-black)] font-black text-lg leading-tight tracking-tight">
-              LOAN FACTORY
-              <span className="block text-[var(--color-lf-orange)] text-[10px] font-bold tracking-[0.22em] mt-0.5">
-                AI ADVANTAGE
-              </span>
-            </span>
+          <Link
+            href="/"
+            className="flex items-center"
+            aria-label="Loan Factory AI Advantage home"
+          >
+            <Logo />
           </Link>
-          <nav className="hidden md:flex items-center gap-7">
+          <nav className="hidden md:flex items-center gap-7" aria-label="Primary">
             {navLinks.map((link) => (
               <Link
                 key={link.href}

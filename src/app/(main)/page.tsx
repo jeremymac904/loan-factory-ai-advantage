@@ -12,6 +12,10 @@ import {
 } from 'lucide-react';
 import { getPublishedTeamLeaders } from '@/lib/mock-data';
 import { generateTagline, formatNMLS } from '@/lib/utils';
+import {
+  PLATFORM_MOTION_VIDEO,
+  TEAM_MARKETING_IMAGE,
+} from '@/lib/brand-assets';
 
 export default function HomePage() {
   const featured = getPublishedTeamLeaders().slice(0, 3);
@@ -70,27 +74,61 @@ export default function HomePage() {
             </div>
           </div>
           <div className="lg:col-span-2">
-            <div className="rounded-3xl border border-[var(--color-lf-border)] bg-[var(--color-lf-surface)] p-6">
-              <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-lf-muted)] mb-3">
-                What you get
-              </p>
-              <ul className="space-y-3">
-                {[
-                  'Cloneable website, landing page, and funnel templates',
-                  'AI reference image + persona document uploads',
-                  'Built-in compliance checks (NMLS, APR, state rules)',
-                  'Marketing review queue with reviewer notes',
-                  'Team Library for shared captions, brand assets, and personas',
-                ].map((feat) => (
-                  <li key={feat} className="flex items-start gap-2 text-sm text-[var(--color-lf-black)]">
-                    <CheckCircle2
-                      size={16}
-                      className="text-[var(--color-lf-orange)] mt-0.5 shrink-0"
-                    />
-                    <span>{feat}</span>
-                  </li>
-                ))}
-              </ul>
+            <div className="rounded-3xl border border-[var(--color-lf-border)] bg-white overflow-hidden shadow-sm">
+              {/* Visual preview — subtle motion loop with a static fallback image
+                  layered underneath. The <video> sits above the <Image> so the
+                  poster is what shows if autoplay is blocked or the file is
+                  missing on the host. */}
+              <div className="relative aspect-[16/10] bg-[var(--color-lf-surface)] overflow-hidden">
+                <Image
+                  src={TEAM_MARKETING_IMAGE}
+                  alt="Loan Factory AI Advantage team marketing workspace preview"
+                  fill
+                  sizes="(min-width: 1024px) 40vw, 100vw"
+                  className="object-cover"
+                  priority
+                />
+                <video
+                  src={PLATFORM_MOTION_VIDEO}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  aria-hidden
+                  className="absolute inset-0 w-full h-full object-cover mix-blend-multiply opacity-90"
+                />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/20 to-transparent h-1/3 pointer-events-none" />
+                <span className="absolute top-3 left-3 inline-flex items-center gap-1 bg-white/90 backdrop-blur text-[10px] font-bold uppercase tracking-widest text-[var(--color-lf-orange-dark)] px-2 py-1 rounded-full">
+                  <Sparkles size={10} /> Platform preview
+                </span>
+              </div>
+
+              <div className="p-6">
+                <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-lf-muted)] mb-3">
+                  What you get
+                </p>
+                <ul className="space-y-2.5">
+                  {[
+                    'Cloneable website, landing page, and funnel templates',
+                    'AI reference image and persona document uploads',
+                    'Built-in compliance checks (NMLS, APR, state rules)',
+                    'Marketing review queue with reviewer notes',
+                    'Team Library for shared templates and assets',
+                  ].map((feat) => (
+                    <li
+                      key={feat}
+                      className="flex items-start gap-2 text-sm text-[var(--color-lf-black)]"
+                    >
+                      <CheckCircle2
+                        size={16}
+                        className="text-[var(--color-lf-orange)] mt-0.5 shrink-0"
+                      />
+                      <span>{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         </div>

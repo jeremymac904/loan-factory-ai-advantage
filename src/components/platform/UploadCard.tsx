@@ -18,6 +18,8 @@ export interface UploadCardProps {
   helperText?: string;
   /** Fires when a file is chosen (filename only). */
   onSelect?: (fileName: string) => void;
+  /** Fires with the raw File. Use this to generate an object-URL preview locally. */
+  onFile?: (file: File) => void;
   /** Fires when the chosen file is cleared. */
   onClear?: () => void;
 }
@@ -45,6 +47,7 @@ export default function UploadCard({
   existingFileName,
   helperText,
   onSelect,
+  onFile,
   onClear,
 }: UploadCardProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -57,6 +60,7 @@ export default function UploadCard({
     // TODO(supabase): upload(file, bucket) → setUrl(signedUrl)
     console.info(`[demo] would upload "${file.name}" to bucket "${bucket}"`);
     onSelect?.(file.name);
+    onFile?.(file);
   }
 
   return (
