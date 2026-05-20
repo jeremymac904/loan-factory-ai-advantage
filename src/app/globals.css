@@ -2,25 +2,35 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #1a1a2e;
+  --foreground: #111111;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  /* === Primary brand — LoanFactory.com aligned === */
+  /* Orange is the primary CTA color across the entire app. */
+  --color-lf-orange: #ff671f;
+  --color-lf-orange-dark: #e2540f;
+  --color-lf-orange-soft: #fff1e7;
+  --color-lf-black: #111111;
+  --color-lf-text: #111111;
+  --color-lf-muted: #5f6368;
+  --color-lf-surface: #f7f8fa;
+  --color-lf-light: #f7f8fa;
+  --color-lf-border: #e5e7eb;
+  --color-lf-white: #ffffff;
+
+  /* === Secondary / legacy === */
+  /* Navy and gold are NOT the primary brand identity anymore. They survive
+     as secondary accents (e.g. NMLS chips, dark info panels) and as the
+     legacy palette on the published Team Leader site. Do not introduce
+     new navy backgrounds on (platform) or marketing pages — use orange. */
   --color-lf-navy: #003087;
   --color-lf-navy-dark: #001a4d;
   --color-lf-gold: #c8960c;
   --color-lf-gold-dark: #a87a0a;
-  /* Ally-inspired marketing platform accent — used only inside (platform) routes. */
-  --color-lf-orange: #ff6b2c;
-  --color-lf-orange-dark: #e35314;
-  --color-lf-orange-soft: #fff1ea;
-  --color-lf-light: #f5f7fa;
-  --color-lf-surface: #fafbfd;
-  --color-lf-text: #1a1a2e;
-  --color-lf-muted: #6b7280;
-  --color-lf-border: #e5e7eb;
 }
 
 body {
@@ -32,4 +42,30 @@ body {
 
 * {
   border-color: rgb(229 231 235);
+}
+
+/* Brand utilities — LoanFactory.com aligned */
+.lf-btn-primary {
+  background-color: var(--color-lf-orange);
+  color: #ffffff;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  padding: 0.6rem 1.25rem;
+  transition: background-color 150ms ease;
+}
+.lf-btn-primary:hover {
+  background-color: var(--color-lf-orange-dark);
+}
+.lf-btn-secondary {
+  background-color: var(--color-lf-surface);
+  color: var(--color-lf-black);
+  font-weight: 600;
+  border: 1px solid var(--color-lf-border);
+  border-radius: 0.75rem;
+  padding: 0.6rem 1.25rem;
+}
+.lf-card {
+  background: #ffffff;
+  border: 1px solid var(--color-lf-border);
+  border-radius: 1rem;
 }

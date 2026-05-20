@@ -5,23 +5,27 @@ import { usePathname } from 'next/navigation';
 import {
   CalendarDays,
   ClipboardCheck,
+  Globe,
   LayoutDashboard,
   LayoutTemplate,
   Library,
   PenSquare,
   Settings,
+  ShieldCheck,
   User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const items = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/templates', label: 'Templates', icon: LayoutTemplate },
+  { href: '/builder', label: 'Website Builder', icon: Globe },
+  { href: '/templates-examples', label: 'Templates & Examples', icon: LayoutTemplate },
   { href: '/content-studio', label: 'Content Studio', icon: PenSquare },
   { href: '/calendar', label: 'Calendar', icon: CalendarDays },
   { href: '/team-library', label: 'Team Library', icon: Library },
   { href: '/profile', label: 'Profile', icon: User },
   { href: '/compliance', label: 'Compliance', icon: ClipboardCheck },
+  { href: '/admin', label: 'Admin', icon: ShieldCheck },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -34,14 +38,19 @@ export default function Sidebar() {
       aria-label="Platform navigation"
     >
       {/* Brand block */}
-      <Link href="/dashboard" className="px-6 py-5 border-b border-[var(--color-lf-border)] block">
+      <Link
+        href="/dashboard"
+        className="px-6 py-5 border-b border-[var(--color-lf-border)] block"
+      >
         <div className="leading-tight">
-          <span className="block font-bold text-[#003087] text-base">Loan Factory</span>
-          <span className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-[#C8960C] mt-0.5">
+          <span className="block font-black text-[var(--color-lf-black)] text-base tracking-tight">
+            LOAN FACTORY
+          </span>
+          <span className="block text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--color-lf-orange)] mt-0.5">
             AI Advantage
           </span>
         </div>
-        <span className="mt-2 inline-block text-[10px] font-semibold uppercase tracking-widest text-[var(--color-lf-orange)]">
+        <span className="mt-2 inline-block text-[10px] font-semibold uppercase tracking-widest text-[var(--color-lf-muted)]">
           1+1+1=5 Pilot
         </span>
       </Link>
@@ -85,37 +94,10 @@ export default function Sidebar() {
           <li>
             <Link
               href="/"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-[#003087] hover:bg-gray-50"
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-[var(--color-lf-muted)] hover:text-[var(--color-lf-black)] hover:bg-gray-50"
             >
               <span className="w-2 h-2 rounded-full bg-gray-300" />
               AI Advantage Home
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/builder"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-[#003087] hover:bg-gray-50"
-            >
-              <span className="w-2 h-2 rounded-full bg-gray-300" />
-              Site Builder
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/showcase"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-[#003087] hover:bg-gray-50"
-            >
-              <span className="w-2 h-2 rounded-full bg-gray-300" />
-              Team Leader Showcase
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/admin"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-[#003087] hover:bg-gray-50"
-            >
-              <span className="w-2 h-2 rounded-full bg-gray-300" />
-              Marketing Admin
             </Link>
           </li>
         </ul>

@@ -86,7 +86,7 @@ export default function PlatformDashboardPage() {
                 Create Social Post <ArrowRight size={14} />
               </Link>
               <Link
-                href="/templates"
+                href="/templates-examples"
                 className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors"
               >
                 Browse Templates
@@ -243,7 +243,7 @@ export default function PlatformDashboardPage() {
             <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
               <h3 className="font-semibold text-gray-800">Featured templates</h3>
               <Link
-                href="/templates"
+                href="/templates-examples"
                 className="text-xs font-semibold text-[var(--color-lf-orange-dark)] hover:underline"
               >
                 All templates →

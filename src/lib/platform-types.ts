@@ -64,6 +64,64 @@ export type ContentStatus =
   | 'Published'
   | 'Rejected';
 
+// --- Builder templates --------------------------------------------------
+
+/** Top-level "what are you building" picker on /builder. */
+export type BuilderKind =
+  | 'team-leader-website'
+  | 'landing-page'
+  | 'recruiting-page'
+  | 'realtor-partner-page'
+  | 'consumer-education-page'
+  | 'funnel-page'
+  | 'spanish-language-page'
+  | 'investor-dscr-page';
+
+export interface BuilderTemplate {
+  id: string;
+  kind: BuilderKind;
+  title: string;
+  /** Short pitch under the title. */
+  description: string;
+  /** Visual flavor token for the card thumbnail. */
+  accent: 'orange' | 'black' | 'gray';
+  /** Language pre-set for this template. */
+  language: 'English' | 'Spanish' | 'Bilingual';
+  /** Compliance status of the master template. */
+  compliance_status: 'pre-approved' | 'needs-personalization' | 'state-restricted';
+  /** Featured rank on the picker. */
+  featured?: boolean;
+}
+
+// --- Submission audit trail ---------------------------------------------
+
+export type SubmissionStatus =
+  | 'Draft'
+  | 'Pending Review'
+  | 'Needs Revision'
+  | 'Approved'
+  | 'Published';
+
+export interface AuditEvent {
+  id: string;
+  submission_id: string;
+  /** When this entry happened. */
+  at: string; // ISO
+  /** Who logged it. */
+  actor: string;
+  /** Status the submission moved INTO (or the kind of note). */
+  action:
+    | 'Created'
+    | 'Submitted'
+    | 'Approved'
+    | 'Requested Changes'
+    | 'Sent Back to Draft'
+    | 'Published'
+    | 'Reviewer Note';
+  /** Optional reviewer note attached to this event. */
+  note?: string;
+}
+
 // --- Profile -------------------------------------------------------------
 
 export interface PlatformUserProfile {

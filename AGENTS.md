@@ -27,10 +27,19 @@ When in doubt, read `node_modules/next/dist/docs/01-app/` before changing framew
 
 ## 2. Loan Factory brand rules
 
-These apply to anything visible on a public-facing page (`/`, `/showcase`, `/site/[slug]`) and to all marketing copy.
+These apply to anything visible on a public-facing page (`/`, `/templates-examples`, `/site/[slug]`) and to all marketing copy. The brand was realigned to LoanFactory.com on 2026-05-20 — see the screenshot review PDF in the project context.
 
-- **Brand colors are mandatory.** Navy `#003087` and gold `#C8960C` are the only primary brand colors. Tailwind tokens `lf-navy` / `lf-gold` exist for this. Do not introduce competing primary colors.
-- **Logo treatment.** "Loan Factory" wordmark in navy. "AI Advantage" subline in gold uppercase tracking-widest. Never alter the wordmark, recolor it, or stylize it as anything other than these two faces.
+- **Primary brand system — LoanFactory.com aligned.** White background, black text, **orange** primary CTAs. Tokens:
+  - `lf-orange` `#FF671F` — primary CTA, links, accent
+  - `lf-orange-dark` `#E2540F` — hover state
+  - `lf-orange-soft` `#FFF1E7` — soft highlight / active nav background
+  - `lf-black` `#111111` — primary text
+  - `lf-muted` `#5F6368` — secondary text
+  - `lf-surface` `#F7F8FA` — page background panels
+  - `lf-border` `#E5E7EB` — borders, dividers
+  - `lf-white` `#FFFFFF` — base
+- **Navy and gold are secondary / legacy only.** Tokens `lf-navy` `#003087` and `lf-gold` `#C8960C` still exist for legacy surfaces (e.g. the published Team Leader site hero, NMLS chips) but are **not** the primary brand identity. Do not introduce new navy-dominant backgrounds on `/`, `/builder`, `/templates-examples`, or any `(platform)` route — use white + orange.
+- **Logo treatment.** "Loan Factory" wordmark in black. "AI Advantage" subline in orange uppercase tracking-widest. Never alter the wordmark.
 - **Typography is Inter.** Loaded via `next/font/google` in the root layout. Do not swap.
 - **Equal Housing Lender mark** must appear in the footer of every public-facing page. The SVG mark on `/site/[slug]` is the canonical rendering — do not delete it or replace it with raster.
 - **Company NMLS #320841** must appear on every public-facing page. Individual Team Leader NMLS must appear on their own `/site/[slug]` in both the hero/utility bar and the footer.
@@ -105,12 +114,15 @@ When in doubt — ask before building.
 ## 8. Quick reference
 
 ```
-Brand              navy #003087   gold #C8960C
+Brand              orange #FF671F (primary)  white + black
+                   navy #003087 / gold #C8960C are secondary / legacy
 Company NMLS       #320841
 Equal Housing      required on every public page
 Framework          Next.js 16.2.6 (App Router, Turbopack)
 Params             Promise<...> — must be awaited
-Route groups       (main)/ for app chrome · site/ for published TL sites
+Route groups       (main)/ for app chrome
+                   (platform)/ for the Ally-inspired workspace
+                   site/ for published TL sites
 Config file        next.config.mjs (not .ts)
 Demo mode          mock-data.ts — persists nothing
 Lint + build       must pass before any commit

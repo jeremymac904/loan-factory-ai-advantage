@@ -16,6 +16,10 @@ export interface UploadCardProps {
   existingFileName?: string;
   /** Subtle helper text under the description. */
   helperText?: string;
+  /** Fires when a file is chosen (filename only). */
+  onSelect?: (fileName: string) => void;
+  /** Fires when the chosen file is cleared. */
+  onClear?: () => void;
 }
 
 /**
@@ -40,6 +44,8 @@ export default function UploadCard({
   accept,
   existingFileName,
   helperText,
+  onSelect,
+  onClear,
 }: UploadCardProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [chosen, setChosen] = useState<string | null>(existingFileName ?? null);
@@ -50,6 +56,7 @@ export default function UploadCard({
     setChosen(file.name);
     // TODO(supabase): upload(file, bucket) → setUrl(signedUrl)
     console.info(`[demo] would upload "${file.name}" to bucket "${bucket}"`);
+    onSelect?.(file.name);
   }
 
   return (
@@ -124,6 +131,7 @@ export default function UploadCard({
               e.preventDefault();
               setChosen(null);
               if (inputRef.current) inputRef.current.value = '';
+              onClear?.();
             }}
             className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50"
             aria-label="Remove file"

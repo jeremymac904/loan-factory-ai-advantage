@@ -6,6 +6,8 @@
 // data being synchronously available beyond initial render.
 
 import type {
+  AuditEvent,
+  BuilderTemplate,
   ContentCalendarItem,
   ContentDraft,
   DashboardStats,
@@ -457,3 +459,135 @@ export const defaultPlatformSettings: PlatformSettings = {
     public_publish_requires_approval: true,
   },
 };
+
+// --- Builder templates (Team Leader picks one before profile inputs) ----
+
+export const builderTemplates: BuilderTemplate[] = [
+  {
+    id: 'btpl_tl_modern',
+    kind: 'team-leader-website',
+    title: 'Modern Team Leader Website',
+    description:
+      'Headshot hero, bio, specialties, social proof, contact form. Built for Northeast Florida-style markets.',
+    accent: 'orange',
+    language: 'English',
+    compliance_status: 'pre-approved',
+    featured: true,
+  },
+  {
+    id: 'btpl_tl_classic',
+    kind: 'team-leader-website',
+    title: 'Classic Team Leader Website',
+    description:
+      'Conservative layout — best for established LOs with a strong personal brand and long bio.',
+    accent: 'black',
+    language: 'English',
+    compliance_status: 'pre-approved',
+  },
+  {
+    id: 'btpl_landing_first_time',
+    kind: 'landing-page',
+    title: 'First-Time Buyer Landing Page',
+    description:
+      'Single-page landing focused on first-time buyer education and a contact opt-in. Plug into paid traffic.',
+    accent: 'orange',
+    language: 'English',
+    compliance_status: 'pre-approved',
+    featured: true,
+  },
+  {
+    id: 'btpl_landing_va',
+    kind: 'landing-page',
+    title: 'VA Loan Landing Page',
+    description: 'Veteran-focused landing page. Compliant VA language baked in.',
+    accent: 'black',
+    language: 'English',
+    compliance_status: 'pre-approved',
+  },
+  {
+    id: 'btpl_recruit_lo',
+    kind: 'recruiting-page',
+    title: 'LO Recruiting Page',
+    description:
+      'Why-join page for recruiting Loan Officers into your Team Leader group. Wholesale broker positioning.',
+    accent: 'orange',
+    language: 'English',
+    compliance_status: 'pre-approved',
+  },
+  {
+    id: 'btpl_realtor_partner',
+    kind: 'realtor-partner-page',
+    title: 'Realtor Partner Co-Branded Page',
+    description:
+      'Co-branded Realtor partnership page with workshop schedule + dual contact form.',
+    accent: 'black',
+    language: 'English',
+    compliance_status: 'needs-personalization',
+  },
+  {
+    id: 'btpl_consumer_ed',
+    kind: 'consumer-education-page',
+    title: 'Consumer Education Hub',
+    description: 'Multi-section education page covering FHA, VA, conventional, and DSCR basics.',
+    accent: 'gray',
+    language: 'English',
+    compliance_status: 'pre-approved',
+  },
+  {
+    id: 'btpl_funnel_workshop',
+    kind: 'funnel-page',
+    title: 'Saturday Workshop Funnel',
+    description:
+      'Open-house-style funnel — RSVP page + reminder + follow-up. Designed for co-marketing with a Realtor.',
+    accent: 'orange',
+    language: 'English',
+    compliance_status: 'needs-personalization',
+    featured: true,
+  },
+  {
+    id: 'btpl_es_first_time',
+    kind: 'spanish-language-page',
+    title: 'Primera Vivienda — Página en Español',
+    description:
+      'Spanish-language first-time-buyer page. Compliant copy reviewed for Spanish-speaking markets.',
+    accent: 'orange',
+    language: 'Spanish',
+    compliance_status: 'pre-approved',
+  },
+  {
+    id: 'btpl_investor_dscr',
+    kind: 'investor-dscr-page',
+    title: 'DSCR Investor Landing Page',
+    description:
+      'Single-page DSCR landing for portfolio builders. Qualifies on rental income — no personal DTI.',
+    accent: 'black',
+    language: 'English',
+    compliance_status: 'pre-approved',
+  },
+];
+
+// --- Submission audit trail (admin) -------------------------------------
+
+export const initialAuditEvents: AuditEvent[] = [
+  {
+    id: 'evt_1',
+    submission_id: '5',
+    at: '2026-05-18T09:00:00Z',
+    actor: 'Ana Martinez',
+    action: 'Created',
+  },
+  {
+    id: 'evt_2',
+    submission_id: '5',
+    at: '2026-05-19T15:24:00Z',
+    actor: 'Ana Martinez',
+    action: 'Submitted',
+  },
+  {
+    id: 'evt_3',
+    submission_id: '6',
+    at: '2026-05-19T11:10:00Z',
+    actor: 'David Kim',
+    action: 'Created',
+  },
+];

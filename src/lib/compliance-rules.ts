@@ -77,6 +77,8 @@ const PROHIBITED_PHRASES: { phrase: string; reason: string }[] = [
   { phrase: 'we fund', reason: 'Correspondent / direct-lender language. Loan Factory is a wholesale broker.' },
   { phrase: 'we underwrite', reason: 'Correspondent / direct-lender language. Loan Factory is a wholesale broker.' },
   { phrase: 'in-house underwriting', reason: 'Correspondent / direct-lender language. Loan Factory is a wholesale broker.' },
+  { phrase: 'free refinance', reason: 'Refinances have closing costs — they are paid by lender credits or built into the rate. Cannot advertise as "free."' },
+  { phrase: 'no fees', reason: 'Loans carry origination, lender, and third-party fees — they may be paid by credits, but cannot be advertised as zero.' },
 ];
 
 const TRIGGER_TERMS_REQUIRING_DETAILS = [
