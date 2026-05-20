@@ -1,0 +1,113 @@
+// Seed data for /admin/intake so the demo has something to triage on first load.
+
+import type { AccessRequest } from './request-access-types';
+
+export const mockAccessRequests: AccessRequest[] = [
+  {
+    id: 'ar_001',
+    status: 'new',
+    submitted_at: '2026-05-18T14:22:00Z',
+    updated_at: '2026-05-18T14:22:00Z',
+    full_name: 'Maria Hernandez',
+    preferred_display_name: 'Maria H.',
+    loan_factory_email: 'maria.hernandez@loanfactory.com',
+    phone: '(305) 555-0142',
+    nmls_number: '4567890',
+    licensed_states: 'FL',
+    current_role: 'Team Leader',
+    is_team_or_group_leader: true,
+    team_name: 'Hernandez Mortgage Group',
+    group_type: 'Team',
+    primary_markets: 'Miami FL, Hialeah FL, Coral Gables FL',
+    languages_served: 'English, Spanish',
+    loan_focus_areas: 'FHA, Conventional, First-Time Buyer',
+    expected_team_members: '4',
+    is_pilot_request: true,
+    marketing_goals:
+      'Build a Spanish-first Team Leader site, run weekly Spanish reels, and convert Realtor partnerships into co-branded campaigns.',
+    current_website: 'https://hernandezmortgage.example.com',
+    google_business_profile_url: '',
+    social_profile_links: 'https://instagram.com/hernandezmortgage',
+    support_needs: 'Spanish content templates + Realtor co-marketing flyers.',
+    notes: 'Recommended by Jeremy.',
+  },
+  {
+    id: 'ar_002',
+    status: 'needs-info',
+    submitted_at: '2026-05-17T09:48:00Z',
+    updated_at: '2026-05-19T11:10:00Z',
+    full_name: 'David Kim',
+    preferred_display_name: 'David Kim',
+    loan_factory_email: 'david.kim@loanfactory.com',
+    phone: '(404) 555-0105',
+    nmls_number: '5678901',
+    licensed_states: 'GA, FL',
+    current_role: 'Loan Officer',
+    is_team_or_group_leader: false,
+    team_name: '',
+    group_type: 'Solo LO',
+    primary_markets: 'Atlanta GA, Duluth GA, Suwanee GA',
+    languages_served: 'English, Korean',
+    loan_focus_areas: 'Conventional, Jumbo',
+    expected_team_members: '1',
+    is_pilot_request: true,
+    marketing_goals: 'Korean-speaking jumbo specialist content. LinkedIn-led.',
+    current_website: '',
+    google_business_profile_url: '',
+    social_profile_links: 'https://linkedin.com/in/davidkim-mortgage',
+    support_needs: 'Korean-language content + LinkedIn templates.',
+    notes: '',
+    reviewer: 'Marketing',
+    reviewer_notes:
+      'Needs: licensed-state verification screenshot and a sample post for Korean-language tone review.',
+  },
+  {
+    id: 'ar_003',
+    status: 'approved',
+    submitted_at: '2026-05-15T18:01:00Z',
+    updated_at: '2026-05-19T16:32:00Z',
+    full_name: 'Carlos Rivera',
+    preferred_display_name: 'Carlos Rivera',
+    loan_factory_email: 'carlos.rivera@loanfactory.com',
+    phone: '(904) 555-0101',
+    nmls_number: '1234567',
+    licensed_states: 'FL',
+    current_role: 'Team Leader',
+    is_team_or_group_leader: true,
+    team_name: 'Rivera Mortgage Team',
+    group_type: 'Team',
+    primary_markets: 'Jacksonville FL, Gainesville FL, Lake City FL',
+    languages_served: 'English, Spanish',
+    loan_focus_areas: 'VA, FHA, First-Time Buyer',
+    expected_team_members: '3',
+    is_pilot_request: true,
+    marketing_goals:
+      'Bilingual veteran-focused content + Jacksonville-area Realtor partnerships.',
+    current_website: '',
+    google_business_profile_url: 'https://g.page/r/carlos-rivera-mortgage',
+    social_profile_links: '',
+    support_needs: 'VA template pack + bilingual caption library.',
+    notes: '',
+    reviewer: 'Jeremy McDonald',
+    reviewer_notes: 'Approved for pilot. Ready to create workspace.',
+  },
+];
+
+export type WorkspaceChecklistItem = {
+  key: string;
+  label: string;
+  required: boolean;
+};
+
+export const WORKSPACE_CHECKLIST: WorkspaceChecklistItem[] = [
+  { key: 'profile-image', label: 'Profile photo uploaded', required: true },
+  { key: 'reference-image', label: 'AI reference image uploaded', required: true },
+  { key: 'persona-doc', label: 'Persona document uploaded', required: true },
+  { key: 'brand-voice-doc', label: 'Brand voice document uploaded', required: false },
+  { key: 'team-profile', label: 'Team / group profile drafted', required: true },
+  { key: 'template-assigned', label: 'Recommended template assigned', required: true },
+  { key: 'compliance-review', label: 'Compliance checklist completed', required: true },
+  { key: 'marketing-approval', label: 'Marketing approval received', required: true },
+  { key: 'training-kit', label: 'Training & webinar kit attached', required: false },
+  { key: 'ai-twin-setup', label: 'AI Twin profile started', required: false },
+];

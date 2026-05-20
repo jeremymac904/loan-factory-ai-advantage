@@ -5,15 +5,19 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
+  Bot,
   CalendarDays,
   ClipboardCheck,
+  GraduationCap,
   Globe,
+  Inbox,
   LayoutDashboard,
   LayoutTemplate,
   Library,
   PenSquare,
   Settings,
   ShieldCheck,
+  Sparkles,
   User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -26,9 +30,13 @@ const items = [
   { href: '/content-studio', label: 'Content Studio', icon: PenSquare },
   { href: '/calendar', label: 'Calendar', icon: CalendarDays },
   { href: '/team-library', label: 'Team Library', icon: Library },
+  { href: '/training', label: 'Training & Webinars', icon: GraduationCap },
+  { href: '/ai-twin', label: 'AI Twin', icon: Sparkles },
+  { href: '/agents', label: 'Agents', icon: Bot },
   { href: '/profile', label: 'Profile', icon: User },
   { href: '/compliance', label: 'Compliance', icon: ClipboardCheck },
   { href: '/admin', label: 'Admin', icon: ShieldCheck },
+  { href: '/admin/intake', label: 'Admin Intake', icon: Inbox },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
