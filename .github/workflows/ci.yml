@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Avoid stacking up jobs on rapid-fire commits to the same PR/branch.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-build:
+    name: Lint & build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      # Demo mode build — no Supabase credentials needed for CI.
+      # When real secrets are added, prefer GitHub Encrypted Secrets,
+      # never inline values here.
+      NEXT_TELEMETRY_DISABLED: '1'
+      NEXT_PUBLIC_APP_URL: 'http://localhost:3000'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
