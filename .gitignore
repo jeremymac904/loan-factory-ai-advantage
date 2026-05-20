@@ -40,3 +40,32 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# -----------------------------------------------------------------------------
+# Project assets — see ASSETS.md
+# -----------------------------------------------------------------------------
+# Internal source files. Keep the folder structure (via .gitkeep) tracked,
+# but ignore the heavy raw files so the repo stays light.
+
+# Raw video files awaiting compression — drop optimized MP4s into public/video instead.
+assets/video_source/*
+!assets/video_source/.gitkeep
+!assets/video_source/README.md
+
+# AI reference images — large, often experimental, and may include personal photos.
+assets/reference_images/*
+!assets/reference_images/.gitkeep
+!assets/reference_images/README.md
+
+# Heavy brand-source files. The folder + final PDFs / Markdown notes are still tracked.
+assets/brand_guide/*.ai
+assets/brand_guide/*.psd
+assets/brand_guide/*.sketch
+assets/brand_guide/*.fig
+assets/brand_guide/*.zip
+assets/brand_guide/*.afdesign
+assets/brand_guide/*.afphoto
+assets/brand_guide/*.indd
+assets/brand_guide/*.eps
+assets/brand_guide/*.tiff
+assets/brand_guide/*.tif
