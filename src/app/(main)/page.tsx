@@ -16,6 +16,7 @@ import {
 import { getPublishedTeamLeaders } from '@/lib/mock-data';
 import { generateTagline, formatNMLS } from '@/lib/utils';
 import {
+  LIGHT_HERO_BACKGROUND,
   PLATFORM_MOTION_VIDEO,
   TEAM_MARKETING_IMAGE,
 } from '@/lib/brand-assets';
@@ -25,38 +26,55 @@ export default function HomePage() {
 
   return (
     <div className="bg-white text-[var(--color-lf-black)]">
-      {/* Hero */}
-      <section className="bg-white border-b border-[var(--color-lf-border)] py-20 px-4">
-        <div className="max-w-6xl mx-auto grid lg:grid-cols-5 gap-12 items-center">
-          <div className="lg:col-span-3">
+      {/* Hero — full-width background image with content overlay */}
+      <section className="relative bg-white border-b border-[var(--color-lf-border)] overflow-hidden">
+        {/* Background — light hero image with a soft white wash so text stays readable */}
+        <div className="absolute inset-0" aria-hidden>
+          <Image
+            src={LIGHT_HERO_BACKGROUND}
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover object-center opacity-100"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/40" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-transparent to-white/80" />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-28 grid lg:grid-cols-12 gap-10 items-center">
+          {/* Left — copy + CTAs */}
+          <div className="lg:col-span-7">
             <span className="inline-flex items-center gap-1.5 bg-[var(--color-lf-orange-soft)] text-[var(--color-lf-orange-dark)] text-[11px] font-bold uppercase tracking-[0.18em] px-3 py-1 rounded-full mb-5">
               <Sparkles size={11} /> 1+1+1=5 Pilot Platform
             </span>
-            <h1 className="text-4xl md:text-5xl font-black leading-tight mb-5 tracking-tight">
-              The Loan Factory Team Leader<br />
-              <span className="text-[var(--color-lf-orange)]">Marketing Platform</span>.
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.95] mb-6 tracking-tight">
+              The Loan Factory<br />
+              Team Leader<br />
+              <span className="text-[var(--color-lf-orange)]">Marketing Platform</span>
+              <span className="text-[var(--color-lf-black)]">.</span>
             </h1>
-            <p className="text-lg text-[var(--color-lf-muted)] mb-8 max-w-xl leading-relaxed">
+            <p className="text-lg sm:text-xl text-[var(--color-lf-muted)] mb-8 max-w-xl leading-relaxed">
               Request access, get approved, and your Team Leader workspace turns on — branded
-              templates, compliance-checked content, webinar kits, and an AI Twin in your own voice.
-              Marketing reviews every public asset before it goes live.
+              templates, compliance-checked content, webinar kits, and an AI Twin in your own
+              voice. Marketing reviews every public asset before it goes live.
             </p>
             <div className="flex flex-wrap gap-3 mb-8">
               <Link
                 href="/request-access"
-                className="inline-flex items-center gap-2 bg-[var(--color-lf-orange)] hover:bg-[var(--color-lf-orange-dark)] text-white font-bold px-6 py-3.5 rounded-xl transition-colors shadow-sm"
+                className="inline-flex items-center gap-2 bg-[var(--color-lf-orange)] hover:bg-[var(--color-lf-orange-dark)] text-white font-bold px-7 py-4 rounded-xl text-base transition-colors shadow-lg shadow-[var(--color-lf-orange)]/25"
               >
                 Request Access <ArrowRight size={16} />
               </Link>
               <Link
                 href="/templates-examples"
-                className="inline-flex items-center gap-2 bg-[var(--color-lf-surface)] hover:bg-gray-100 text-[var(--color-lf-black)] font-semibold px-6 py-3.5 rounded-xl border border-[var(--color-lf-border)]"
+                className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-[var(--color-lf-black)] font-semibold px-7 py-4 rounded-xl border border-[var(--color-lf-border)] shadow-sm"
               >
                 Browse Templates
               </Link>
               <Link
                 href="/dashboard"
-                className="inline-flex items-center gap-2 text-[var(--color-lf-muted)] hover:text-[var(--color-lf-black)] font-semibold px-3 py-3.5 text-sm"
+                className="inline-flex items-center gap-2 text-[var(--color-lf-muted)] hover:text-[var(--color-lf-black)] font-semibold px-3 py-4 text-sm"
               >
                 View Demo Dashboard →
               </Link>
@@ -74,63 +92,80 @@ export default function HomePage() {
                 <LayoutTemplate size={13} className="text-[var(--color-lf-orange)]" />
                 Website + funnel templates
               </span>
+              <span className="flex items-center gap-1.5">
+                <Sparkles size={13} className="text-[var(--color-lf-orange)]" />
+                AI Twin + agent boardroom
+              </span>
             </div>
           </div>
-          <div className="lg:col-span-2">
-            <div className="rounded-3xl border border-[var(--color-lf-border)] bg-white overflow-hidden shadow-sm">
-              {/* Visual preview — subtle motion loop with a static fallback image
-                  layered underneath. The <video> sits above the <Image> so the
-                  poster is what shows if autoplay is blocked or the file is
-                  missing on the host. */}
-              <div className="relative aspect-[16/10] bg-[var(--color-lf-surface)] overflow-hidden">
-                <Image
-                  src={TEAM_MARKETING_IMAGE}
-                  alt="Loan Factory AI Advantage team marketing workspace preview"
-                  fill
-                  sizes="(min-width: 1024px) 40vw, 100vw"
-                  className="object-cover"
-                  priority
-                />
-                <video
-                  src={PLATFORM_MOTION_VIDEO}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  aria-hidden
-                  className="absolute inset-0 w-full h-full object-cover mix-blend-multiply opacity-90"
-                />
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/20 to-transparent h-1/3 pointer-events-none" />
-                <span className="absolute top-3 left-3 inline-flex items-center gap-1 bg-white/90 backdrop-blur text-[10px] font-bold uppercase tracking-widest text-[var(--color-lf-orange-dark)] px-2 py-1 rounded-full">
-                  <Sparkles size={10} /> Platform preview
-                </span>
-              </div>
 
-              <div className="p-6">
-                <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-lf-muted)] mb-3">
-                  What you get
-                </p>
-                <ul className="space-y-2.5">
-                  {[
-                    'Cloneable website, landing page, and funnel templates',
-                    'AI reference image and persona document uploads',
-                    'Built-in compliance checks (NMLS, APR, state rules)',
-                    'Marketing review queue with reviewer notes',
-                    'Team Library for shared templates and assets',
-                  ].map((feat) => (
-                    <li
-                      key={feat}
-                      className="flex items-start gap-2 text-sm text-[var(--color-lf-black)]"
-                    >
-                      <CheckCircle2
-                        size={16}
-                        className="text-[var(--color-lf-orange)] mt-0.5 shrink-0"
-                      />
-                      <span>{feat}</span>
-                    </li>
-                  ))}
-                </ul>
+          {/* Right — big, prominent product preview with motion */}
+          <div className="lg:col-span-5">
+            <div className="relative">
+              {/* Glowing orange backdrop accent */}
+              <div
+                className="absolute -inset-6 bg-gradient-to-br from-[var(--color-lf-orange)]/15 via-transparent to-[var(--color-lf-orange)]/10 rounded-[3rem] blur-2xl"
+                aria-hidden
+              />
+              <div className="relative rounded-3xl border border-[var(--color-lf-border)] bg-white overflow-hidden shadow-2xl shadow-black/5">
+                {/* Top: motion video over still image */}
+                <div className="relative aspect-[16/10] bg-[var(--color-lf-surface)] overflow-hidden">
+                  <Image
+                    src={TEAM_MARKETING_IMAGE}
+                    alt="Loan Factory AI Advantage team marketing workspace preview"
+                    fill
+                    sizes="(min-width: 1024px) 45vw, 100vw"
+                    className="object-cover"
+                    priority
+                  />
+                  <video
+                    src={PLATFORM_MOTION_VIDEO}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    aria-hidden
+                    className="absolute inset-0 w-full h-full object-cover mix-blend-multiply opacity-95"
+                  />
+                  <div
+                    className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/40 to-transparent h-1/3 pointer-events-none"
+                    aria-hidden
+                  />
+                  <span className="absolute top-4 left-4 inline-flex items-center gap-1 bg-white/95 backdrop-blur text-[10px] font-bold uppercase tracking-widest text-[var(--color-lf-orange-dark)] px-2.5 py-1 rounded-full shadow-sm">
+                    <Sparkles size={10} /> Platform preview
+                  </span>
+                  <span className="absolute bottom-4 left-4 right-4 inline-flex items-center gap-2 text-white text-sm font-semibold drop-shadow-lg">
+                    <span className="w-2 h-2 rounded-full bg-[var(--color-lf-orange)] animate-pulse" />
+                    Live demo · all features browsable
+                  </span>
+                </div>
+
+                <div className="p-6 sm:p-7">
+                  <p className="text-xs font-bold uppercase tracking-widest text-[var(--color-lf-muted)] mb-3">
+                    What you get
+                  </p>
+                  <ul className="space-y-2.5">
+                    {[
+                      'Cloneable website, landing page, and funnel templates',
+                      'AI reference image and persona document uploads',
+                      'Built-in compliance checks (NMLS, APR, state rules)',
+                      'Marketing review queue with reviewer notes',
+                      'Team Library for shared templates and assets',
+                    ].map((feat) => (
+                      <li
+                        key={feat}
+                        className="flex items-start gap-2 text-sm text-[var(--color-lf-black)]"
+                      >
+                        <CheckCircle2
+                          size={16}
+                          className="text-[var(--color-lf-orange)] mt-0.5 shrink-0"
+                        />
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
           </div>

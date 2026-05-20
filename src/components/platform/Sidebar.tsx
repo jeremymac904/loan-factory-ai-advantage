@@ -44,13 +44,13 @@ function SidebarBrand() {
   const [errored, setErrored] = useState(false);
 
   return (
-    <Link href="/dashboard" className="px-6 py-5 border-b border-[var(--color-lf-border)] block">
+    <Link href="/dashboard" className="px-5 py-6 border-b border-[var(--color-lf-border)] block">
       {errored ? (
         <div className="leading-tight">
-          <span className="block font-black text-[var(--color-lf-black)] text-base tracking-tight">
+          <span className="block font-black text-[var(--color-lf-black)] text-lg tracking-tight">
             LOAN FACTORY
           </span>
-          <span className="block text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--color-lf-orange)] mt-0.5">
+          <span className="block text-[11px] font-bold uppercase tracking-[0.22em] text-[var(--color-lf-orange)] mt-0.5">
             AI Advantage
           </span>
         </div>
@@ -58,14 +58,14 @@ function SidebarBrand() {
         <Image
           src={AI_ADVANTAGE_LOGO}
           alt="Loan Factory AI Advantage"
-          width={180}
-          height={40}
+          width={240}
+          height={52}
           priority
           onError={() => setErrored(true)}
-          className="h-9 w-auto object-contain"
+          className="h-12 w-auto object-contain"
         />
       )}
-      <span className="mt-2 inline-block text-[10px] font-semibold uppercase tracking-widest text-[var(--color-lf-muted)]">
+      <span className="mt-2.5 inline-block text-[10px] font-bold uppercase tracking-widest text-[var(--color-lf-muted)]">
         1+1+1=5 Pilot
       </span>
     </Link>

@@ -6,12 +6,15 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  CheckCircle2,
   FileText,
   LayoutTemplate,
   Star,
+  Upload,
   User,
   Eye,
   Sparkles,
+  X,
 } from 'lucide-react';
 import UploadCard from '@/components/platform/UploadCard';
 import { builderTemplates } from '@/lib/platform-mock-data';
@@ -497,63 +500,83 @@ function TemplateStep({
 }) {
   return (
     <div>
-      <h2 className="text-xl font-bold text-[var(--color-lf-black)] mb-1">
-        Step 1 — What are you building?
-      </h2>
-      <p className="text-sm text-[var(--color-lf-muted)] mb-6">
-        Pick a starting template. You can preview the full layout after submit. Marketing reviews
-        every asset before it goes live.
-      </p>
+      <div className="flex items-start justify-between flex-wrap gap-3 mb-6">
+        <div>
+          <span className="inline-flex items-center gap-1.5 bg-[var(--color-lf-orange-soft)] text-[var(--color-lf-orange-dark)] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full mb-2">
+            <Sparkles size={11} /> Step 1 of 5
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-black text-[var(--color-lf-black)] tracking-tight">
+            Pick what you&apos;re building.
+          </h2>
+          <p className="text-sm text-[var(--color-lf-muted)] mt-1 max-w-xl">
+            Every template is brand-locked and compliance-aware. Marketing reviews before publish.
+          </p>
+        </div>
+      </div>
       <div className="grid sm:grid-cols-2 gap-4">
         {templates.map((t) => {
           const active = selected === t.id;
+          const accentBg =
+            t.accent === 'orange'
+              ? 'from-[var(--color-lf-orange)] to-[var(--color-lf-orange-dark)]'
+              : t.accent === 'black'
+              ? 'from-[var(--color-lf-black)] to-[#2b2b2b]'
+              : 'from-gray-500 to-gray-700';
           return (
             <button
               type="button"
               key={t.id}
               onClick={() => onSelect(t.id)}
-              className={`text-left bg-white border-2 rounded-2xl p-5 transition-all ${
+              className={`group text-left bg-white border-2 rounded-2xl overflow-hidden transition-all ${
                 active
-                  ? 'border-[var(--color-lf-orange)] shadow-md'
-                  : 'border-[var(--color-lf-border)] hover:border-[var(--color-lf-orange)]'
+                  ? 'border-[var(--color-lf-orange)] shadow-lg shadow-[var(--color-lf-orange)]/15 ring-1 ring-[var(--color-lf-orange)]/40'
+                  : 'border-[var(--color-lf-border)] hover:border-[var(--color-lf-orange)] hover:shadow-md'
               }`}
             >
-              <div className="flex items-start justify-between mb-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-lf-muted)]">
-                  {t.kind.replace(/-/g, ' ')}
-                </span>
+              {/* Visual header — gradient + kind label */}
+              <div
+                className={`relative bg-gradient-to-br ${accentBg} h-24 px-5 py-4 text-white flex flex-col justify-between`}
+              >
+                <div className="flex items-start justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-widest opacity-90">
+                    {t.kind.replace(/-/g, ' ')}
+                  </span>
+                  {t.featured && (
+                    <span className="text-[10px] font-bold uppercase tracking-widest bg-white/20 backdrop-blur px-2 py-0.5 rounded-full">
+                      ★ Featured
+                    </span>
+                  )}
+                </div>
+                <p className="text-base font-bold leading-tight">{t.title}</p>
+
                 {active && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--color-lf-orange-dark)] bg-[var(--color-lf-orange-soft)] px-2 py-0.5 rounded-full">
+                  <span className="absolute top-2 right-2 inline-flex items-center gap-1 text-[10px] font-bold text-[var(--color-lf-orange-dark)] bg-white px-2 py-0.5 rounded-full shadow-sm">
                     <Check size={11} /> Selected
                   </span>
                 )}
               </div>
-              <p className="font-bold text-[var(--color-lf-black)] text-base leading-tight mb-1">
-                {t.title}
-              </p>
-              <p className="text-xs text-[var(--color-lf-muted)] leading-relaxed mb-3 line-clamp-3">
-                {t.description}
-              </p>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--color-lf-surface)] text-[var(--color-lf-muted)] border border-[var(--color-lf-border)]">
-                  {t.language}
-                </span>
-                <span
-                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                    t.compliance_status === 'pre-approved'
-                      ? 'bg-green-50 text-green-700'
-                      : t.compliance_status === 'needs-personalization'
-                      ? 'bg-amber-50 text-amber-700'
-                      : 'bg-purple-50 text-purple-700'
-                  }`}
-                >
-                  {t.compliance_status.replace(/-/g, ' ')}
-                </span>
-                {t.featured && (
-                  <span className="text-[10px] font-semibold text-[var(--color-lf-orange-dark)]">
-                    ★ Featured
+
+              {/* Body */}
+              <div className="p-5">
+                <p className="text-sm text-[var(--color-lf-muted)] leading-relaxed line-clamp-3 mb-3">
+                  {t.description}
+                </p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--color-lf-surface)] text-[var(--color-lf-muted)] border border-[var(--color-lf-border)]">
+                    {t.language}
                   </span>
-                )}
+                  <span
+                    className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                      t.compliance_status === 'pre-approved'
+                        ? 'bg-green-50 text-green-700 border border-green-100'
+                        : t.compliance_status === 'needs-personalization'
+                        ? 'bg-amber-50 text-amber-700 border border-amber-100'
+                        : 'bg-purple-50 text-purple-700 border border-purple-100'
+                    }`}
+                  >
+                    {t.compliance_status.replace(/-/g, ' ')}
+                  </span>
+                </div>
               </div>
             </button>
           );
@@ -722,6 +745,11 @@ function StoryStep({
           />
         </div>
       </div>
+
+      <BioImporter
+        currentBio={form.long_bio}
+        onImport={(text) => setField('long_bio', text)}
+      />
 
       <div>
         <div className="flex justify-between mb-1">
@@ -1175,6 +1203,176 @@ function BuilderUpload({
         onClear={onClear}
         helperText="Demo upload — file does not leave the browser. Will sync to Supabase Storage once wired."
       />
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ *  BioImporter — drop a .txt / .md / .pdf / .docx persona doc into
+ *  the bio textarea. Text and markdown are parsed client-side via
+ *  FileReader. PDF and DOCX show a "demo: server parse pending" note
+ *  and surface the filename — server-side parsing will land with the
+ *  Supabase Storage + extract pipeline.
+ * ------------------------------------------------------------------ */
+
+function BioImporter({
+  currentBio,
+  onImport,
+}: {
+  currentBio: string;
+  onImport: (text: string) => void;
+}) {
+  const [importedName, setImportedName] = useState<string | null>(null);
+  const [importedKind, setImportedKind] = useState<'text' | 'binary' | null>(null);
+  const [hover, setHover] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function clear() {
+    setImportedName(null);
+    setImportedKind(null);
+    setError(null);
+  }
+
+  async function readFile(file: File) {
+    setError(null);
+    setBusy(true);
+    try {
+      const name = file.name.toLowerCase();
+      const isTextLike =
+        name.endsWith('.txt') ||
+        name.endsWith('.md') ||
+        name.endsWith('.markdown') ||
+        file.type === 'text/plain' ||
+        file.type === 'text/markdown';
+      if (isTextLike) {
+        const text = await file.text();
+        const cleaned = text.trim().slice(0, 4000); // keep bio reasonably bounded
+        if (currentBio && !confirm('Replace existing bio with imported text?')) {
+          setBusy(false);
+          return;
+        }
+        onImport(cleaned);
+        setImportedName(file.name);
+        setImportedKind('text');
+      } else if (
+        name.endsWith('.pdf') ||
+        name.endsWith('.docx') ||
+        name.endsWith('.doc') ||
+        file.type === 'application/pdf' ||
+        file.type ===
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ) {
+        // TODO(parser): server-side extract via /api/parse-doc once Supabase
+        // Storage + a pdf/docx parser are wired. For demo, just stash the
+        // filename so the user knows it was received.
+        setImportedName(file.name);
+        setImportedKind('binary');
+      } else {
+        setError(`Unsupported file type. Accepts .txt, .md, .pdf, .docx, .doc.`);
+      }
+    } catch (err) {
+      setError((err as Error).message || 'Could not read file.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="bg-[var(--color-lf-orange-soft)] border border-orange-100 rounded-2xl p-4">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-[var(--color-lf-orange-dark)]">
+            Import bio from a document
+          </p>
+          <p className="text-[11px] text-[var(--color-lf-muted)] mt-0.5">
+            Drop a persona doc, brand voice doc, or any short write-up. We&apos;ll prefill the bio.
+          </p>
+        </div>
+        {importedName && (
+          <button
+            type="button"
+            onClick={clear}
+            className="p-1 text-[var(--color-lf-muted)] hover:text-red-600"
+            aria-label="Remove imported file"
+          >
+            <X size={14} />
+          </button>
+        )}
+      </div>
+
+      <label
+        onDragOver={(e) => {
+          e.preventDefault();
+          setHover(true);
+        }}
+        onDragLeave={() => setHover(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setHover(false);
+          const f = e.dataTransfer.files?.[0];
+          if (f) void readFile(f);
+        }}
+        className={`flex items-center gap-3 border-2 border-dashed rounded-xl p-3 cursor-pointer transition-colors bg-white ${
+          importedName
+            ? 'border-green-200'
+            : hover
+            ? 'border-[var(--color-lf-orange)] bg-[var(--color-lf-orange-soft)]'
+            : 'border-[var(--color-lf-border)] hover:border-[var(--color-lf-orange)]'
+        }`}
+      >
+        <div
+          className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+            importedName
+              ? 'bg-green-100 text-green-700'
+              : 'bg-[var(--color-lf-orange-soft)] text-[var(--color-lf-orange-dark)]'
+          }`}
+        >
+          {importedName ? <CheckCircle2 size={16} /> : <Upload size={16} />}
+        </div>
+        <div className="min-w-0 flex-1">
+          {importedName ? (
+            <>
+              <p className="text-sm font-semibold text-[var(--color-lf-black)] truncate">
+                {importedName}
+              </p>
+              <p className="text-[11px] text-[var(--color-lf-muted)]">
+                {importedKind === 'text'
+                  ? 'Imported into your bio — edit below.'
+                  : 'Received. Server-side extract will land when Supabase Storage is wired.'}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-semibold text-[var(--color-lf-black)]">
+                {busy ? 'Reading…' : 'Drop file or '}
+                {!busy && (
+                  <span className="text-[var(--color-lf-orange-dark)] underline">browse</span>
+                )}
+              </p>
+              <p className="text-[11px] text-[var(--color-lf-muted)]">
+                Accepts .txt, .md, .pdf, .docx, .doc — never upload borrower data or private loan
+                files.
+              </p>
+            </>
+          )}
+        </div>
+        <input
+          type="file"
+          accept=".txt,.md,.markdown,.pdf,.docx,.doc,text/plain,text/markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          className="sr-only"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) void readFile(f);
+          }}
+        />
+      </label>
+
+      {error && (
+        <p className="text-[11px] text-red-700 bg-red-50 border border-red-100 rounded-md px-2 py-1 mt-2">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

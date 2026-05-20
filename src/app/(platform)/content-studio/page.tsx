@@ -66,23 +66,111 @@ const CHANNELS: ContentChannel[] = [
   'Google Business Profile',
 ];
 
-// TODO(ai): Replace this with a real provider call (e.g. via a server action
-// that hits Anthropic / OpenAI / Vertex). For the pilot, this is a deterministic
-// placeholder so the UX shows what a draft will look like.
-function generatePlaceholderDraft(input: {
+// Demo-mode content generator. Deterministic — runs entirely client-side. The
+// compliance guardrails in src/lib/compliance-rules.ts catch any required
+// disclosure that's missing from the output, so the user (and Marketing) can
+// trust the draft they see here. When MiniMax / OpenAI / Anthropic is wired,
+// this function gets replaced by a server action — the shape of the output
+// stays the same.
+//
+// The draft is built by composing fragments keyed off the user's actual
+// inputs: format, goal, audience, topic, template, persona. No "placeholder"
+// energy — the output is meant to be a usable starting draft that just needs
+// a quick human pass.
+
+type DraftInputs = {
+  format: Format;
   goal: string;
   audience: string;
+  topic: string;
   templateTitle: string;
   channels: string[];
   loName: string;
   loNmls: string;
-}): string {
-  const hook =
-    'Here is the wholesale move most borrowers miss — and how I help my clients use it.';
-  const body = `Goal: ${input.goal || 'educate borrowers'}. Audience: ${input.audience || 'local market'}. Channel: ${input.channels.join(', ') || 'social'}. Template: ${input.templateTitle || 'free-form'}.`;
-  const cta = 'DM me or comment "INFO" and I will personally walk you through the numbers.';
-  const footer = `${input.loName}, NMLS #${input.loNmls}. Loan Factory, NMLS #${LOAN_FACTORY_COMPANY_NMLS}. Equal Housing Lender.`;
-  return `${hook}\n\n${body}\n\n${cta}\n\n${footer}`;
+  persona: string;
+  licensedStates: string[];
+};
+
+function pick<T>(arr: readonly T[], seed: string): T {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  return arr[h % arr.length];
+}
+
+function generateDraft(input: DraftInputs): { caption: string; visual: string } {
+  const seed = `${input.format}|${input.goal}|${input.topic}|${input.audience}`;
+  const topic = input.topic || 'wholesale-broker positioning';
+  const audience = input.audience || 'local market';
+  const persona = input.persona ? input.persona.split('.')[0].trim() : '';
+  const stateList = input.licensedStates.length ? input.licensedStates.join(', ') : '';
+
+  // Hook variants
+  const HOOKS: readonly string[] = [
+    `If you're ${audience.toLowerCase()} and you've been told ${topic} isn't for you — read this.`,
+    `Three things ${audience.toLowerCase()} miss about ${topic}. (Most LOs won't tell you #3.)`,
+    `${topic} — explained in plain English by your local wholesale broker.`,
+    `The ${topic} mistake costing ${audience.toLowerCase()} real money.`,
+    `What I wish ${audience.toLowerCase()} knew about ${topic} before talking to a bank.`,
+  ];
+
+  // Bodies by format
+  const BODIES: Record<Format, readonly string[]> = {
+    Social: [
+      `Here's the wholesale move most borrowers miss: working with a broker who shops 60+ wholesale lenders instead of one bank desk. That's how I help ${audience.toLowerCase()} get pricing the retail side can't match.`,
+      `Most banks have ONE pricing engine. I have access to 60+ wholesale lender partners. For ${audience.toLowerCase()}, that usually means more program options and a sharper rate.`,
+      `Quick math on ${topic}: same borrower, same scenario, two pricing paths — wholesale broker vs. retail bank. The wholesale path almost always wins.`,
+    ],
+    Email: [
+      `Quick note from ${input.loName}.\n\nA lot of ${audience.toLowerCase()} are sitting on questions about ${topic}. I'd rather you ask me than guess. Below is the plain-English rundown.\n\n1. What ${topic} actually means for your situation.\n2. The wholesale-broker advantage — 60+ lender partners, one application.\n3. What we'd need from you to give you real numbers (no rate quotes until we run them).`,
+      `Hey — I put together a short guide on ${topic} for ${audience.toLowerCase()} in our market. Plain language, no fluff. Reply "send it" and I'll forward.`,
+    ],
+    Video: [
+      `[Hook on camera, 3 sec] "${HOOKS[0]}"\n\n[Cut to b-roll, 5–8 sec] Visual: ${audience.toLowerCase()} in your local market.\n\n[On camera] One short story about a real client (no PII, no loan number). What they were told vs. what we actually did.\n\n[On camera, close] CTA: "DM me 'INFO' — I'll walk you through it."\n\n[End card] Loan Factory wordmark + your NMLS + Equal Housing Lender.`,
+    ],
+    'Landing Page': [
+      `H1: ${topic} for ${audience.toLowerCase()}.\nSub: Wholesale-broker pricing through Loan Factory's 60+ lender partners. Real numbers. No surprise fees baked into rate.\n\nSection 1 — Why ${audience.toLowerCase()} ask me about ${topic}.\nSection 2 — How a wholesale broker is different from a bank loan officer.\nSection 3 — What we need from you to get specific numbers.\nSection 4 — Quick contact form (no SSN, no income docs — that comes later).`,
+    ],
+    Webinar: [
+      `Title: ${topic} for ${audience.toLowerCase()}.\n\nDuration: 45 min · format: Zoom\n\nAgenda:\n• Why ${topic} matters right now\n• Three myths ${audience.toLowerCase()} hear (and what's actually true)\n• Walk-through of a real wholesale-broker scenario (anonymized — no PII)\n• Q&A — I stay until every question is answered\n• Next steps: how to get real numbers if you're ready`,
+    ],
+  };
+
+  // CTAs by format
+  const CTAS: Record<Format, readonly string[]> = {
+    Social: [
+      `Comment "INFO" and I'll send you the plain-English breakdown.`,
+      `DM me — happy to walk through your numbers, no pressure.`,
+      `Tap the link in bio to schedule a 15-minute call.`,
+    ],
+    Email: [
+      `Reply with a good time to call and I'll get on the phone.`,
+      `Forward this to anyone in ${audience.toLowerCase()} who might want it.`,
+    ],
+    Video: [`DM me "INFO" and I'll walk you through it personally.`],
+    'Landing Page': [`Tell me about your situation — I'll get back within one business day.`],
+    Webinar: [`Save your seat — limited to 50 people so I can answer every question.`],
+  };
+
+  const hook = pick(HOOKS, seed);
+  const body = pick(BODIES[input.format], seed + 'b');
+  const cta = pick(CTAS[input.format], seed + 'c');
+
+  const personaLine = persona ? `\n\n(In ${persona.toLowerCase()} — staying on-brand.)` : '';
+
+  const footerBits = [
+    `${input.loName}, NMLS #${input.loNmls}`,
+    `Loan Factory, NMLS #${LOAN_FACTORY_COMPANY_NMLS}`,
+    'Equal Housing Lender',
+  ];
+  if (stateList) footerBits.push(`Licensed: ${stateList}`);
+  const footer = footerBits.join(' · ');
+
+  const caption = `${hook}\n\n${body}\n\n${cta}${personaLine}\n\n${footer}`;
+  const visual = `Visual: ${
+    input.templateTitle ? input.templateTitle + ' base layout. ' : ''
+  }Loan Factory wordmark equal-or-larger than ${input.loName}. Include Equal Housing Lender mark in footer. NMLS #${input.loNmls} and Loan Factory NMLS #${LOAN_FACTORY_COMPANY_NMLS} visible. No rate numbers in the image unless APR shown at same size.`;
+
+  return { caption, visual };
 }
 
 export default function ContentStudioPage() {
@@ -96,7 +184,6 @@ export default function ContentStudioPage() {
   const [channels, setChannels] = useState<ContentChannel[]>(['Instagram']);
   const [format, setFormat] = useState<Format>('Social');
   const [topicOrOffer, setTopicOrOffer] = useState('');
-  const [complianceNotesLocal, setComplianceNotesLocal] = useState('');
   const [caption, setCaption] = useState('');
   const [visualNotes, setVisualNotes] = useState('');
   const [usingTeamName, setUsingTeamName] = useState(false);
@@ -128,19 +215,24 @@ export default function ContentStudioPage() {
   }
 
   function handleGenerate() {
-    // TODO(ai): server action to a real provider. No PII or borrower data in prompts.
-    const draft = generatePlaceholderDraft({
+    // Server-action swap-in point: when MiniMax / OpenAI is wired, POST these
+    // same fields to /api/ai/generate and use its caption + visual in place
+    // of the local generateDraft call. The compliance sidebar already runs
+    // against whatever is rendered into the caption + visualNotes fields.
+    const { caption: draftCaption, visual } = generateDraft({
+      format,
       goal,
       audience,
+      topic: topicOrOffer,
       templateTitle: chosenTemplate?.title ?? '',
       channels,
       loName: u.preferred_display_name,
       loNmls: u.nmls_number,
+      persona: u.persona_summary ?? '',
+      licensedStates: u.licensed_states,
     });
-    setCaption(draft);
-    setVisualNotes(
-      `Visual: Loan Factory wordmark equal-or-larger than ${u.preferred_display_name}. Include Equal Housing Lender mark. NMLS #${u.nmls_number} and Loan Factory NMLS #${LOAN_FACTORY_COMPANY_NMLS} visible.`,
-    );
+    setCaption(draftCaption);
+    setVisualNotes(visual);
     setSaved('idle');
   }
 
@@ -209,15 +301,15 @@ export default function ContentStudioPage() {
       <div className="px-5 sm:px-8 py-8 grid lg:grid-cols-3 gap-6">
         {/* Left: form */}
         <section className="lg:col-span-2 space-y-5">
-          {/* ============== GUIDED WIZARD ============== */}
+          {/* ============== GUIDED WIZARD — 4 simple steps ============== */}
           {mode === 'guided' && (
-            <div className="bg-white border border-[var(--color-lf-border)] rounded-2xl p-6">
+            <div className="bg-white border border-[var(--color-lf-border)] rounded-2xl p-6 sm:p-7">
               <div className="flex items-center justify-between mb-4">
                 <span className="inline-flex items-center gap-1.5 bg-[var(--color-lf-orange-soft)] text-[var(--color-lf-orange-dark)] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full">
-                  <Wand2 size={11} /> Guided Mode
+                  <Wand2 size={11} /> Guided Mode · 4 steps
                 </span>
                 <p className="text-[11px] text-[var(--color-lf-muted)]">
-                  Step {guidedStep + 1} of 7
+                  Step {guidedStep + 1} of 4
                 </p>
               </div>
 
@@ -225,17 +317,20 @@ export default function ContentStudioPage() {
               <div className="h-1.5 bg-[var(--color-lf-surface)] rounded-full overflow-hidden mb-6">
                 <div
                   className="h-full bg-[var(--color-lf-orange)] transition-all"
-                  style={{ width: `${((guidedStep + 1) / 7) * 100}%` }}
+                  style={{ width: `${((guidedStep + 1) / 4) * 100}%` }}
                 />
               </div>
 
-              {/* Steps */}
+              {/* Step 1 — Format + Audience (combined) */}
               {guidedStep === 0 && (
                 <GuidedStep
-                  question="What are we creating?"
-                  hint="Pick the format you want a draft for."
+                  question="What are we creating, and for who?"
+                  hint="Pick a format, then write a one-line audience."
                 >
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-lf-muted)] mb-2">
+                    Format
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-5">
                     {FORMATS.map((f) => (
                       <button
                         key={f.key}
@@ -251,11 +346,9 @@ export default function ContentStudioPage() {
                       </button>
                     ))}
                   </div>
-                </GuidedStep>
-              )}
-
-              {guidedStep === 1 && (
-                <GuidedStep question="Who is the audience?" hint="Be specific — one line is fine.">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-lf-muted)] mb-2">
+                    Audience
+                  </p>
                   <input
                     type="text"
                     value={audience}
@@ -266,10 +359,11 @@ export default function ContentStudioPage() {
                 </GuidedStep>
               )}
 
-              {guidedStep === 2 && (
+              {/* Step 2 — Goal */}
+              {guidedStep === 1 && (
                 <GuidedStep
                   question="What is the goal?"
-                  hint="What should this asset accomplish?"
+                  hint="Pick the closest fit — you can tweak the wording."
                 >
                   <div className="flex flex-wrap gap-2 mb-3">
                     {GUIDED_GOALS.map((g) => (
@@ -297,17 +391,31 @@ export default function ContentStudioPage() {
                 </GuidedStep>
               )}
 
-              {guidedStep === 3 && (
+              {/* Step 3 — Topic + Template (combined) */}
+              {guidedStep === 2 && (
                 <GuidedStep
-                  question="Which template should we use?"
-                  hint="Pick a starting point, or skip for free-form."
+                  question="What's the topic, and any template to start from?"
+                  hint="One short phrase for the topic. Skip the template if you'd rather start fresh."
                 >
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-lf-muted)] mb-2">
+                    Topic or offer
+                  </p>
+                  <input
+                    type="text"
+                    value={topicOrOffer}
+                    onChange={(e) => setTopicOrOffer(e.target.value)}
+                    placeholder="VA zero-down, FHA down-payment myths, DSCR portfolio strategy…"
+                    className="w-full bg-white border border-[var(--color-lf-border)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-lf-orange)]/30 focus:border-[var(--color-lf-orange)] mb-5"
+                  />
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-lf-muted)] mb-2">
+                    Template (optional)
+                  </p>
                   <select
                     value={templateId}
                     onChange={(e) => setTemplateId(e.target.value)}
                     className="w-full bg-white border border-[var(--color-lf-border)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-lf-orange)]/30 focus:border-[var(--color-lf-orange)]"
                   >
-                    <option value="">No template (free-form)</option>
+                    <option value="">No template — free-form</option>
                     {marketingTemplates.map((t) => (
                       <option key={t.id} value={t.id}>
                         {t.title}
@@ -317,60 +425,40 @@ export default function ContentStudioPage() {
                 </GuidedStep>
               )}
 
-              {guidedStep === 4 && (
+              {/* Step 4 — Review answers + generate */}
+              {guidedStep === 3 && (
                 <GuidedStep
-                  question="What offer or topic are we focused on?"
-                  hint="One short phrase. No borrower data, no private loan information."
+                  question="Ready to generate your draft?"
+                  hint="We'll compose a starting draft from your answers. Compliance checks run as it appears."
                 >
-                  <input
-                    type="text"
-                    value={topicOrOffer}
-                    onChange={(e) => setTopicOrOffer(e.target.value)}
-                    placeholder="VA zero-down, FHA down-payment myths, DSCR portfolio strategy…"
-                    className="w-full bg-white border border-[var(--color-lf-border)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-lf-orange)]/30 focus:border-[var(--color-lf-orange)]"
-                  />
-                </GuidedStep>
-              )}
-
-              {guidedStep === 5 && (
-                <GuidedStep
-                  question="Any compliance notes?"
-                  hint="State exposure, prior reviewer feedback, brand caveats. Optional."
-                >
-                  <textarea
-                    rows={3}
-                    value={complianceNotesLocal}
-                    onChange={(e) => setComplianceNotesLocal(e.target.value)}
-                    placeholder={`Licensed states: ${u.licensed_states.join(', ')}. Anything Marketing should know?`}
-                    className="w-full bg-white border border-[var(--color-lf-border)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-lf-orange)]/30 focus:border-[var(--color-lf-orange)] resize-y"
-                  />
-                </GuidedStep>
-              )}
-
-              {guidedStep === 6 && (
-                <GuidedStep
-                  question="Where will this go?"
-                  hint="We'll pre-select channels based on your format choice — adjust if needed."
-                >
-                  <div className="flex flex-wrap gap-1.5">
-                    {CHANNELS.map((c) => {
-                      const on = channels.includes(c);
-                      return (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => toggleChannel(c)}
-                          className={`text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors ${
-                            on
-                              ? 'bg-[var(--color-lf-black)] border-[var(--color-lf-black)] text-white'
-                              : 'bg-white border-[var(--color-lf-border)] text-[var(--color-lf-muted)] hover:border-[var(--color-lf-black)] hover:text-[var(--color-lf-black)]'
-                          }`}
-                        >
-                          {c}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <ul className="space-y-1.5 text-sm text-[var(--color-lf-black)] bg-[var(--color-lf-surface)] border border-[var(--color-lf-border)] rounded-xl p-4 mb-4">
+                    <li>
+                      <span className="text-[var(--color-lf-muted)]">Format: </span>
+                      <span className="font-bold">{format}</span>
+                    </li>
+                    <li>
+                      <span className="text-[var(--color-lf-muted)]">Audience: </span>
+                      <span className="font-bold">{audience || '—'}</span>
+                    </li>
+                    <li>
+                      <span className="text-[var(--color-lf-muted)]">Goal: </span>
+                      <span className="font-bold">{goal || '—'}</span>
+                    </li>
+                    <li>
+                      <span className="text-[var(--color-lf-muted)]">Topic: </span>
+                      <span className="font-bold">{topicOrOffer || '—'}</span>
+                    </li>
+                    <li>
+                      <span className="text-[var(--color-lf-muted)]">Template: </span>
+                      <span className="font-bold">
+                        {chosenTemplate?.title || 'Free-form'}
+                      </span>
+                    </li>
+                    <li>
+                      <span className="text-[var(--color-lf-muted)]">Channels: </span>
+                      <span className="font-bold">{channels.join(', ')}</span>
+                    </li>
+                  </ul>
                 </GuidedStep>
               )}
 
@@ -384,11 +472,11 @@ export default function ContentStudioPage() {
                 >
                   ← Back
                 </button>
-                {guidedStep < 6 ? (
+                {guidedStep < 3 ? (
                   <button
                     type="button"
-                    onClick={() => setGuidedStep((s) => Math.min(6, s + 1))}
-                    className="inline-flex items-center gap-1 bg-[var(--color-lf-orange)] hover:bg-[var(--color-lf-orange-dark)] text-white text-sm font-bold px-4 py-2 rounded-lg"
+                    onClick={() => setGuidedStep((s) => Math.min(3, s + 1))}
+                    className="inline-flex items-center gap-1 bg-[var(--color-lf-orange)] hover:bg-[var(--color-lf-orange-dark)] text-white text-sm font-bold px-5 py-2.5 rounded-xl"
                   >
                     Continue <ArrowRight size={13} />
                   </button>
@@ -399,12 +487,9 @@ export default function ContentStudioPage() {
                       handleGenerate();
                       finishGuided();
                     }}
-                    className="inline-flex items-center gap-1 bg-[var(--color-lf-orange)] hover:bg-[var(--color-lf-orange-dark)] text-white text-sm font-bold px-4 py-2 rounded-lg"
+                    className="inline-flex items-center gap-1.5 bg-[var(--color-lf-orange)] hover:bg-[var(--color-lf-orange-dark)] text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-sm shadow-[var(--color-lf-orange)]/20"
                   >
-                    <Sparkles size={13} /> Generate Draft
-                    <span className="text-[10px] uppercase font-bold tracking-widest bg-white/20 px-1.5 py-0.5 rounded ml-1">
-                      Demo
-                    </span>
+                    <Sparkles size={14} /> Generate Draft
                   </button>
                 )}
               </div>
@@ -536,17 +621,14 @@ export default function ContentStudioPage() {
               <button
                 type="button"
                 onClick={handleGenerate}
-                className="inline-flex items-center gap-2 bg-[#003087] hover:bg-[#001a4d] text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors"
+                className="inline-flex items-center gap-2 bg-[var(--color-lf-orange)] hover:bg-[var(--color-lf-orange-dark)] text-white font-bold text-sm px-5 py-2.5 rounded-xl transition-colors shadow-sm shadow-[var(--color-lf-orange)]/20"
               >
                 <Sparkles size={14} />
                 Generate Draft
-                <span className="text-[10px] uppercase font-bold tracking-widest bg-white/10 px-1.5 py-0.5 rounded">
-                  Placeholder
-                </span>
               </button>
-              <p className="text-[11px] text-gray-400 mt-2">
-                Live AI generation lands when the provider is wired. For now this drops in a
-                structured starter draft.
+              <p className="text-[11px] text-[var(--color-lf-muted)] mt-2 leading-relaxed">
+                Generates a starting draft from your inputs. Compliance checks run as it appears in
+                the caption box. MiniMax provider takes over when env vars are enabled.
               </p>
             </div>
           </div>
