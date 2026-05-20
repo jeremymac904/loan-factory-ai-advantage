@@ -1,9 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Bot, Play, Settings, Sparkles } from 'lucide-react';
 import Topbar from '@/components/platform/Topbar';
-import { listAgents, type AgentRole } from '@/lib/agents/registry';
+import { listAgents, type AgentRole, type AgentRoleId } from '@/lib/agents/registry';
+
+type AgentCategory =
+  | 'Strategy'
+  | 'Creative'
+  | 'Compliance'
+  | 'Research'
+  | 'Video'
+  | 'Technical';
+
+const AGENT_CATEGORIES: Record<AgentRoleId, AgentCategory[]> = {
+  'chief-orchestrator': ['Strategy', 'Technical'],
+  'ai-twin': ['Creative', 'Strategy'],
+  'ui-ux-design': ['Creative', 'Technical'],
+  'brand-compliance': ['Compliance'],
+  'seo-geo-aeo-content': ['Strategy', 'Creative'],
+  'market-research': ['Research', 'Strategy'],
+  'competitor-intel': ['Research'],
+  'youtube-research': ['Research', 'Video'],
+  'content-strategy': ['Strategy', 'Creative'],
+  'template-architect': ['Technical', 'Creative'],
+  'minimax-multimodal': ['Creative', 'Video', 'Technical'],
+};
+
+const CATEGORY_LIST: AgentCategory[] = [
+  'Strategy',
+  'Creative',
+  'Compliance',
+  'Research',
+  'Video',
+  'Technical',
+];
 
 const INPUTS_FOR_AGENT: Record<AgentRole['id'], string[]> = {
   'chief-orchestrator': ['Goal', 'Constraints', 'Deadline'],
@@ -36,12 +67,18 @@ const OUTPUTS_FOR_AGENT: Record<AgentRole['id'], string[]> = {
 export default function AgentsPage() {
   const agents = listAgents();
   const [activeId, setActiveId] = useState<AgentRole['id'] | null>(null);
+  const [filter, setFilter] = useState<AgentCategory | null>(null);
 
   function runDemo(a: AgentRole) {
     // TODO(ai): swap for /api/ai/generate with agent=<a.id>.
     setActiveId(a.id);
     setTimeout(() => setActiveId(null), 2200);
   }
+
+  const filtered = useMemo(() => {
+    if (!filter) return agents;
+    return agents.filter((a) => AGENT_CATEGORIES[a.id].includes(filter));
+  }, [agents, filter]);
 
   return (
     <>
@@ -51,8 +88,45 @@ export default function AgentsPage() {
       />
 
       <div className="px-5 sm:px-8 py-8 space-y-6">
+        {/* Category filter chips */}
+        <section className="bg-white border border-[var(--color-lf-border)] rounded-2xl p-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-lf-muted)] mr-1">
+              Filter
+            </span>
+            <button
+              type="button"
+              onClick={() => setFilter(null)}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-full border ${
+                filter === null
+                  ? 'bg-[var(--color-lf-black)] border-[var(--color-lf-black)] text-white'
+                  : 'bg-white border-[var(--color-lf-border)] text-[var(--color-lf-muted)] hover:border-[var(--color-lf-black)] hover:text-[var(--color-lf-black)]'
+              }`}
+            >
+              All
+            </button>
+            {CATEGORY_LIST.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setFilter(filter === c ? null : c)}
+                className={`text-xs font-semibold px-3 py-1.5 rounded-full border ${
+                  filter === c
+                    ? 'bg-[var(--color-lf-orange)] border-[var(--color-lf-orange)] text-white'
+                    : 'bg-white border-[var(--color-lf-border)] text-[var(--color-lf-muted)] hover:border-[var(--color-lf-orange)] hover:text-[var(--color-lf-orange-dark)]'
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+            <p className="text-[11px] text-[var(--color-lf-muted)] ml-auto">
+              Showing <span className="font-bold text-[var(--color-lf-black)]">{filtered.length}</span> of {agents.length}
+            </p>
+          </div>
+        </section>
+
         <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {agents.map((a) => (
+          {filtered.map((a) => (
             <article
               key={a.id}
               className="bg-white border border-[var(--color-lf-border)] rounded-2xl p-5 flex flex-col"
@@ -82,9 +156,20 @@ export default function AgentsPage() {
                 </span>
               </div>
 
-              <p className="text-sm text-[var(--color-lf-muted)] leading-relaxed mb-4">
+              <p className="text-sm text-[var(--color-lf-muted)] leading-relaxed mb-3">
                 {a.description}
               </p>
+
+              <div className="flex flex-wrap gap-1.5 mb-4">
+                {AGENT_CATEGORIES[a.id].map((c) => (
+                  <span
+                    key={c}
+                    className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[var(--color-lf-orange-soft)] text-[var(--color-lf-orange-dark)]"
+                  >
+                    {c}
+                  </span>
+                ))}
+              </div>
 
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <Bullet label="Inputs" items={INPUTS_FOR_AGENT[a.id]} />

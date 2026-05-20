@@ -77,6 +77,7 @@ export default function AdminIntakePage() {
   const [filter, setFilter] = useState<Filter>('all');
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [confirmCreateId, setConfirmCreateId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   const stats = useMemo(() => {
@@ -337,7 +338,7 @@ export default function AdminIntakePage() {
                         {r.status === 'approved' && (
                           <button
                             type="button"
-                            onClick={() => createWorkspace(r)}
+                            onClick={() => setConfirmCreateId(r.id)}
                             className="inline-flex items-center gap-1 text-xs bg-[var(--color-lf-orange)] text-white px-2.5 py-1 rounded-lg hover:bg-[var(--color-lf-orange-dark)] font-semibold"
                           >
                             Create Workspace
@@ -424,6 +425,94 @@ export default function AdminIntakePage() {
           </div>
         </section>
       )}
+
+      {/* Create Workspace confirmation modal */}
+      {confirmCreateId && (() => {
+        const req = requests.find((r) => r.id === confirmCreateId);
+        if (!req) return null;
+        return (
+          <div
+            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setConfirmCreateId(null)}
+          >
+            <div
+              className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[var(--color-lf-orange-dark)] bg-[var(--color-lf-orange-soft)] px-2 py-0.5 rounded-full mb-2">
+                    <ShieldCheck size={11} /> Create Workspace
+                  </span>
+                  <h3 className="text-xl font-black text-[var(--color-lf-black)] tracking-tight">
+                    {req.team_name || req.full_name}
+                  </h3>
+                  <p className="text-xs text-[var(--color-lf-muted)] mt-0.5">
+                    NMLS #{req.nmls_number} · {req.primary_markets}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setConfirmCreateId(null)}
+                  className="p-1 text-[var(--color-lf-muted)] hover:text-red-600"
+                  aria-label="Close"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <p className="text-sm text-[var(--color-lf-muted)] mb-4 leading-relaxed">
+                Creating a workspace will spin up the following resources in demo mode. Nothing
+                external is created until Supabase persistence is wired.
+              </p>
+
+              <ul className="space-y-2 mb-5">
+                {[
+                  'Team or group profile draft',
+                  'Branding checklist (logo, colors, headshot)',
+                  'Recommended template assigned',
+                  'AI Twin setup checklist',
+                  'Starter content pack recommendation',
+                  'Training kit recommendation',
+                  'Compliance checklist seeded',
+                  'Marketing review queue created',
+                ].map((item) => (
+                  <li
+                    key={item}
+                    className="flex items-start gap-2 text-sm text-[var(--color-lf-black)]"
+                  >
+                    <CheckCircle2
+                      size={14}
+                      className="text-[var(--color-lf-orange)] mt-0.5 shrink-0"
+                    />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="flex items-center justify-end gap-2 pt-4 border-t border-[var(--color-lf-border)]">
+                <button
+                  type="button"
+                  onClick={() => setConfirmCreateId(null)}
+                  className="text-sm font-semibold text-[var(--color-lf-muted)] hover:text-[var(--color-lf-black)] px-4 py-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    createWorkspace(req);
+                    setConfirmCreateId(null);
+                  }}
+                  className="inline-flex items-center gap-1.5 bg-[var(--color-lf-orange)] hover:bg-[var(--color-lf-orange-dark)] text-white text-sm font-bold px-4 py-2 rounded-xl"
+                >
+                  <ShieldCheck size={14} /> Confirm & Create
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Drawer / modal */}
       {open && (

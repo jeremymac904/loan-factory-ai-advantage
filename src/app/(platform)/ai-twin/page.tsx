@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
+  AlertTriangle,
   ArrowRight,
   CheckCircle2,
   ImageIcon,
   Mic,
+  ShieldAlert,
+  ShieldCheck,
   Sparkles,
   Wand2,
 } from 'lucide-react';
@@ -33,12 +36,50 @@ export default function AiTwinPage() {
   );
   const [sampleCaption, setSampleCaption] = useState('');
   const [sampleScript, setSampleScript] = useState('');
+  const [offLimitTopics, setOffLimitTopics] = useState(
+    'Borrower names, loan numbers, credit scores, income docs, rate guarantees.',
+  );
   const [generated, setGenerated] = useState(false);
 
   function generatePreview() {
     // TODO(ai): swap for a server action that hits /api/ai/generate with task='agent-response'.
     setGenerated(true);
   }
+
+  // Readiness model — every check filled = +1.
+  const readinessItems = useMemo(
+    () => [
+      { key: 'persona', label: 'Persona summary', done: persona.trim().length > 20 },
+      { key: 'tone', label: 'Tone preferences', done: tone.trim().length > 5 },
+      { key: 'audience', label: 'Preferred audience', done: audience.trim().length > 5 },
+      { key: 'topics', label: 'Approved topics', done: topics.trim().length > 5 },
+      { key: 'do-not-say', label: 'Do-not-say list', done: doNotSay.trim().length > 5 },
+      { key: 'off-limits', label: 'Off-limit topics', done: offLimitTopics.trim().length > 5 },
+      { key: 'sample-caption', label: 'Sample social caption', done: sampleCaption.trim().length > 20 },
+      { key: 'sample-script', label: 'Sample video script', done: sampleScript.trim().length > 20 },
+      { key: 'headshot', label: 'Headshot on file', done: !!u.profile_image_url },
+      { key: 'ai-reference', label: 'AI reference image uploaded', done: !!u.ai_reference_image_url },
+      { key: 'brand-voice', label: 'Brand voice document uploaded', done: !!u.brand_voice_document_url },
+      { key: 'persona-doc', label: 'Persona document uploaded', done: !!u.persona_document_url },
+    ],
+    [
+      persona,
+      tone,
+      audience,
+      topics,
+      doNotSay,
+      offLimitTopics,
+      sampleCaption,
+      sampleScript,
+      u.profile_image_url,
+      u.ai_reference_image_url,
+      u.brand_voice_document_url,
+      u.persona_document_url,
+    ],
+  );
+  const readyCount = readinessItems.filter((i) => i.done).length;
+  const readyPct = Math.round((readyCount / readinessItems.length) * 100);
+  const missing = readinessItems.filter((i) => !i.done);
 
   return (
     <>
@@ -50,6 +91,23 @@ export default function AiTwinPage() {
       <div className="px-5 sm:px-8 py-8 grid lg:grid-cols-3 gap-6">
         {/* Inputs */}
         <section className="lg:col-span-2 space-y-5">
+          {/* Sensitive-data warning */}
+          <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-start gap-3">
+            <ShieldAlert size={18} className="text-red-600 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-bold text-red-800 text-sm">
+                Never upload borrower documents or private loan data.
+              </p>
+              <p className="text-xs text-red-700 mt-1 leading-relaxed">
+                The AI Twin only consumes your <span className="font-bold">own</span> persona,
+                tone, samples, and reference photos. Do not upload borrower files, credit reports,
+                income docs, IDs, statements, loan numbers, or non-public personal information of
+                any client. If something has client data on it, redact it before uploading or do
+                not upload it at all.
+              </p>
+            </div>
+          </div>
+
           <div className="bg-white border border-[var(--color-lf-border)] rounded-2xl p-6 space-y-5">
             <h2 className="text-sm font-bold uppercase tracking-widest text-[var(--color-lf-muted)]">
               Voice inputs
@@ -88,11 +146,21 @@ export default function AiTwinPage() {
                 onChange={(e) => setDoNotSay(e.target.value)}
               />
             </Field>
-            <Field label="Common topics" hint="What you want most of your content to cover.">
+            <Field label="Approved topics" hint="What you want most of your content to cover.">
               <input
                 className={inputClass}
                 value={topics}
                 onChange={(e) => setTopics(e.target.value)}
+              />
+            </Field>
+            <Field
+              label="Off-limit topics"
+              hint="Topics the AI Twin must never produce — even if asked."
+            >
+              <input
+                className={inputClass}
+                value={offLimitTopics}
+                onChange={(e) => setOffLimitTopics(e.target.value)}
               />
             </Field>
           </div>
@@ -170,6 +238,62 @@ export default function AiTwinPage() {
 
         {/* Outputs */}
         <aside className="space-y-5 lg:sticky lg:top-20 self-start">
+          {/* Readiness score */}
+          <div className="bg-white border border-[var(--color-lf-border)] rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-bold uppercase tracking-widest text-[var(--color-lf-muted)]">
+                AI Twin readiness
+              </p>
+              <span className="text-2xl font-black text-[var(--color-lf-black)]">{readyPct}%</span>
+            </div>
+            <div className="h-2 bg-[var(--color-lf-surface)] rounded-full overflow-hidden mb-3">
+              <div
+                className="h-full bg-[var(--color-lf-orange)] transition-all"
+                style={{ width: `${readyPct}%` }}
+              />
+            </div>
+            <p className="text-[11px] text-[var(--color-lf-muted)] mb-2">
+              {readyCount} of {readinessItems.length} inputs complete
+            </p>
+            {missing.length > 0 && (
+              <ul className="space-y-1 text-[11px] mt-3 max-h-40 overflow-auto">
+                {missing.slice(0, 6).map((m) => (
+                  <li key={m.key} className="flex items-start gap-2 text-[var(--color-lf-muted)]">
+                    <AlertTriangle size={11} className="mt-0.5 text-amber-500 shrink-0" />
+                    <span>{m.label}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* MiniMax provider status */}
+          <div className="bg-white border border-[var(--color-lf-border)] rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <ShieldCheck size={14} className="text-[var(--color-lf-orange)]" />
+              <p className="text-xs font-bold uppercase tracking-widest text-[var(--color-lf-muted)]">
+                MiniMax status
+              </p>
+            </div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-800 border border-yellow-100">
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" /> Demo mode
+              </span>
+            </div>
+            <p className="text-[11px] text-[var(--color-lf-muted)] leading-relaxed">
+              The MiniMax provider stays in demo mode until <code className="font-bold">AI_PROVIDER=minimax</code>,{' '}
+              <code className="font-bold">AI_FEATURES_ENABLED=true</code>, plus the server-side
+              MiniMax env vars are set in Netlify. Live MiniMax calls require Marketing &amp; IT
+              approval first.
+            </p>
+            <Link
+              href="/settings"
+              className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-[var(--color-lf-orange-dark)] hover:underline"
+            >
+              Provider settings <ArrowRight size={10} />
+            </Link>
+          </div>
+
           {!generated ? (
             <div className="bg-[var(--color-lf-orange-soft)] border border-orange-100 rounded-2xl p-5 text-center">
               <Sparkles

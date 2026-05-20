@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import {
   AlertTriangle,
+  ArrowRight,
   CheckCircle2,
   Save,
   Send,
@@ -10,6 +11,7 @@ import {
   Sparkles,
   Target,
   Users,
+  Wand2,
 } from 'lucide-react';
 import Topbar from '@/components/platform/Topbar';
 import ComplianceBadge from '@/components/platform/ComplianceBadge';
@@ -20,6 +22,29 @@ import {
   runComplianceCheck,
 } from '@/lib/compliance-rules';
 import type { ContentChannel } from '@/lib/platform-types';
+
+type StudioMode = 'guided' | 'advanced';
+
+type Format = 'Social' | 'Email' | 'Video' | 'Landing Page' | 'Webinar';
+
+const FORMATS: { key: Format; channels: ContentChannel[] }[] = [
+  { key: 'Social', channels: ['Instagram', 'Facebook', 'LinkedIn', 'TikTok'] },
+  { key: 'Email', channels: ['Email'] },
+  { key: 'Video', channels: ['YouTube', 'TikTok', 'Instagram'] },
+  { key: 'Landing Page', channels: ['Website'] },
+  { key: 'Webinar', channels: ['Website', 'Email'] },
+];
+
+const GUIDED_GOALS = [
+  'Educate consumers',
+  'Get Realtor meetings',
+  'Recruit LOs',
+  'Promote a webinar',
+  'Create weekly team content',
+  'Create listing partner content',
+  'Create Spanish content',
+  'Create video script',
+];
 
 const GOAL_PRESETS = [
   'Educate veterans on VA benefit',
@@ -62,10 +87,16 @@ function generatePlaceholderDraft(input: {
 
 export default function ContentStudioPage() {
   const u = currentUserProfile;
+  const [mode, setMode] = useState<StudioMode>('guided');
+  const [guidedStep, setGuidedStep] = useState(0);
+
   const [goal, setGoal] = useState('');
   const [audience, setAudience] = useState('');
   const [templateId, setTemplateId] = useState<string>('');
   const [channels, setChannels] = useState<ContentChannel[]>(['Instagram']);
+  const [format, setFormat] = useState<Format>('Social');
+  const [topicOrOffer, setTopicOrOffer] = useState('');
+  const [complianceNotesLocal, setComplianceNotesLocal] = useState('');
   const [caption, setCaption] = useState('');
   const [visualNotes, setVisualNotes] = useState('');
   const [usingTeamName, setUsingTeamName] = useState(false);
@@ -128,16 +159,267 @@ export default function ContentStudioPage() {
 
   const complianceFooter = `${u.preferred_display_name} | NMLS #${u.nmls_number} | Loan Factory | NMLS #${LOAN_FACTORY_COMPANY_NMLS} | Equal Housing Lender`;
 
+  function applyGuidedFormat(f: Format) {
+    setFormat(f);
+    const matched = FORMATS.find((x) => x.key === f);
+    if (matched) setChannels(matched.channels);
+  }
+
+  function finishGuided() {
+    // Merge guided answers into the underlying state.
+    const goalText = goal || (topicOrOffer ? `Educate around: ${topicOrOffer}` : '');
+    if (!goal) setGoal(goalText);
+    // Switch to advanced for caption editing + compliance review.
+    setMode('advanced');
+  }
+
   return (
     <>
       <Topbar
         title="Content Studio"
-        subtitle="Draft a compliant social post. Generation is a placeholder until the AI provider is wired."
+        subtitle="Draft a compliant asset. Generation is a placeholder — every output is marked Draft, requires Marketing review, and never publishes externally."
+        rightSlot={
+          <div className="inline-flex items-center bg-[var(--color-lf-surface)] border border-[var(--color-lf-border)] rounded-full p-0.5 text-xs font-bold">
+            <button
+              type="button"
+              onClick={() => setMode('guided')}
+              className={`px-3 py-1.5 rounded-full transition-colors ${
+                mode === 'guided'
+                  ? 'bg-[var(--color-lf-orange)] text-white'
+                  : 'text-[var(--color-lf-muted)] hover:text-[var(--color-lf-black)]'
+              }`}
+            >
+              Guided
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('advanced')}
+              className={`px-3 py-1.5 rounded-full transition-colors ${
+                mode === 'advanced'
+                  ? 'bg-[var(--color-lf-black)] text-white'
+                  : 'text-[var(--color-lf-muted)] hover:text-[var(--color-lf-black)]'
+              }`}
+            >
+              Advanced
+            </button>
+          </div>
+        }
       />
 
       <div className="px-5 sm:px-8 py-8 grid lg:grid-cols-3 gap-6">
         {/* Left: form */}
         <section className="lg:col-span-2 space-y-5">
+          {/* ============== GUIDED WIZARD ============== */}
+          {mode === 'guided' && (
+            <div className="bg-white border border-[var(--color-lf-border)] rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <span className="inline-flex items-center gap-1.5 bg-[var(--color-lf-orange-soft)] text-[var(--color-lf-orange-dark)] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full">
+                  <Wand2 size={11} /> Guided Mode
+                </span>
+                <p className="text-[11px] text-[var(--color-lf-muted)]">
+                  Step {guidedStep + 1} of 7
+                </p>
+              </div>
+
+              {/* Progress bar */}
+              <div className="h-1.5 bg-[var(--color-lf-surface)] rounded-full overflow-hidden mb-6">
+                <div
+                  className="h-full bg-[var(--color-lf-orange)] transition-all"
+                  style={{ width: `${((guidedStep + 1) / 7) * 100}%` }}
+                />
+              </div>
+
+              {/* Steps */}
+              {guidedStep === 0 && (
+                <GuidedStep
+                  question="What are we creating?"
+                  hint="Pick the format you want a draft for."
+                >
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    {FORMATS.map((f) => (
+                      <button
+                        key={f.key}
+                        type="button"
+                        onClick={() => applyGuidedFormat(f.key)}
+                        className={`text-xs font-semibold px-3 py-3 rounded-xl border transition-colors ${
+                          format === f.key
+                            ? 'bg-[var(--color-lf-orange)] border-[var(--color-lf-orange)] text-white'
+                            : 'bg-white border-[var(--color-lf-border)] text-[var(--color-lf-muted)] hover:border-[var(--color-lf-orange)] hover:text-[var(--color-lf-orange-dark)]'
+                        }`}
+                      >
+                        {f.key}
+                      </button>
+                    ))}
+                  </div>
+                </GuidedStep>
+              )}
+
+              {guidedStep === 1 && (
+                <GuidedStep question="Who is the audience?" hint="Be specific — one line is fine.">
+                  <input
+                    type="text"
+                    value={audience}
+                    onChange={(e) => setAudience(e.target.value)}
+                    placeholder="Veterans in Jacksonville, first-time buyers in St. Augustine, etc."
+                    className="w-full bg-white border border-[var(--color-lf-border)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-lf-orange)]/30 focus:border-[var(--color-lf-orange)]"
+                  />
+                </GuidedStep>
+              )}
+
+              {guidedStep === 2 && (
+                <GuidedStep
+                  question="What is the goal?"
+                  hint="What should this asset accomplish?"
+                >
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {GUIDED_GOALS.map((g) => (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => setGoal(g)}
+                        className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+                          goal === g
+                            ? 'bg-[var(--color-lf-black)] border-[var(--color-lf-black)] text-white'
+                            : 'bg-white border-[var(--color-lf-border)] text-[var(--color-lf-muted)] hover:border-[var(--color-lf-black)] hover:text-[var(--color-lf-black)]'
+                        }`}
+                      >
+                        {g}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    value={goal}
+                    onChange={(e) => setGoal(e.target.value)}
+                    placeholder="Or write your own goal."
+                    className="w-full bg-white border border-[var(--color-lf-border)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-lf-orange)]/30 focus:border-[var(--color-lf-orange)]"
+                  />
+                </GuidedStep>
+              )}
+
+              {guidedStep === 3 && (
+                <GuidedStep
+                  question="Which template should we use?"
+                  hint="Pick a starting point, or skip for free-form."
+                >
+                  <select
+                    value={templateId}
+                    onChange={(e) => setTemplateId(e.target.value)}
+                    className="w-full bg-white border border-[var(--color-lf-border)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-lf-orange)]/30 focus:border-[var(--color-lf-orange)]"
+                  >
+                    <option value="">No template (free-form)</option>
+                    {marketingTemplates.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.title}
+                      </option>
+                    ))}
+                  </select>
+                </GuidedStep>
+              )}
+
+              {guidedStep === 4 && (
+                <GuidedStep
+                  question="What offer or topic are we focused on?"
+                  hint="One short phrase. No borrower data, no private loan information."
+                >
+                  <input
+                    type="text"
+                    value={topicOrOffer}
+                    onChange={(e) => setTopicOrOffer(e.target.value)}
+                    placeholder="VA zero-down, FHA down-payment myths, DSCR portfolio strategy…"
+                    className="w-full bg-white border border-[var(--color-lf-border)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-lf-orange)]/30 focus:border-[var(--color-lf-orange)]"
+                  />
+                </GuidedStep>
+              )}
+
+              {guidedStep === 5 && (
+                <GuidedStep
+                  question="Any compliance notes?"
+                  hint="State exposure, prior reviewer feedback, brand caveats. Optional."
+                >
+                  <textarea
+                    rows={3}
+                    value={complianceNotesLocal}
+                    onChange={(e) => setComplianceNotesLocal(e.target.value)}
+                    placeholder={`Licensed states: ${u.licensed_states.join(', ')}. Anything Marketing should know?`}
+                    className="w-full bg-white border border-[var(--color-lf-border)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-lf-orange)]/30 focus:border-[var(--color-lf-orange)] resize-y"
+                  />
+                </GuidedStep>
+              )}
+
+              {guidedStep === 6 && (
+                <GuidedStep
+                  question="Where will this go?"
+                  hint="We'll pre-select channels based on your format choice — adjust if needed."
+                >
+                  <div className="flex flex-wrap gap-1.5">
+                    {CHANNELS.map((c) => {
+                      const on = channels.includes(c);
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => toggleChannel(c)}
+                          className={`text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors ${
+                            on
+                              ? 'bg-[var(--color-lf-black)] border-[var(--color-lf-black)] text-white'
+                              : 'bg-white border-[var(--color-lf-border)] text-[var(--color-lf-muted)] hover:border-[var(--color-lf-black)] hover:text-[var(--color-lf-black)]'
+                          }`}
+                        >
+                          {c}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </GuidedStep>
+              )}
+
+              {/* Nav */}
+              <div className="flex items-center justify-between mt-6 pt-5 border-t border-[var(--color-lf-border)]">
+                <button
+                  type="button"
+                  onClick={() => setGuidedStep((s) => Math.max(0, s - 1))}
+                  disabled={guidedStep === 0}
+                  className="text-xs font-semibold text-[var(--color-lf-muted)] hover:text-[var(--color-lf-black)] disabled:opacity-30"
+                >
+                  ← Back
+                </button>
+                {guidedStep < 6 ? (
+                  <button
+                    type="button"
+                    onClick={() => setGuidedStep((s) => Math.min(6, s + 1))}
+                    className="inline-flex items-center gap-1 bg-[var(--color-lf-orange)] hover:bg-[var(--color-lf-orange-dark)] text-white text-sm font-bold px-4 py-2 rounded-lg"
+                  >
+                    Continue <ArrowRight size={13} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleGenerate();
+                      finishGuided();
+                    }}
+                    className="inline-flex items-center gap-1 bg-[var(--color-lf-orange)] hover:bg-[var(--color-lf-orange-dark)] text-white text-sm font-bold px-4 py-2 rounded-lg"
+                  >
+                    <Sparkles size={13} /> Generate Draft
+                    <span className="text-[10px] uppercase font-bold tracking-widest bg-white/20 px-1.5 py-0.5 rounded ml-1">
+                      Demo
+                    </span>
+                  </button>
+                )}
+              </div>
+
+              <p className="text-[11px] text-[var(--color-lf-muted)] mt-4 leading-relaxed">
+                Every output is a <span className="font-bold">Draft</span>, requires{' '}
+                <span className="font-bold">Marketing review</span>, and is{' '}
+                <span className="font-bold">never auto-posted</span>.
+              </p>
+            </div>
+          )}
+
+          {/* ============== ADVANCED MODE: full form ============== */}
+          {mode === 'advanced' && (
+            <>
           {/* Top: goal & audience */}
           <div className="bg-white border border-[var(--color-lf-border)] rounded-2xl p-5">
             <div className="grid md:grid-cols-2 gap-5">
@@ -332,6 +614,8 @@ export default function ContentStudioPage() {
               </button>
             </div>
           </div>
+            </>
+          )}
         </section>
 
         {/* Right: compliance sidebar */}
@@ -420,5 +704,27 @@ export default function ContentStudioPage() {
         </aside>
       </div>
     </>
+  );
+}
+
+function GuidedStep({
+  question,
+  hint,
+  children,
+}: {
+  question: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <h3 className="text-lg font-black text-[var(--color-lf-black)] tracking-tight mb-1">
+        {question}
+      </h3>
+      {hint && (
+        <p className="text-xs text-[var(--color-lf-muted)] mb-4 leading-relaxed">{hint}</p>
+      )}
+      <div>{children}</div>
+    </div>
   );
 }
