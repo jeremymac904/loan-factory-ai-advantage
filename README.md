@@ -147,6 +147,48 @@ The short version:
 
 ---
 
+## AI / Agent System (preview)
+
+The repo carries a scaffold for an agent-based AI layer. Right now it returns **placeholder responses only** — Marketing and IT have not approved live generation. The wiring exists so the rest of the pilot stays unblocked.
+
+### What's in the repo today
+
+- **Agent registry** — `src/lib/agents/registry.ts`. A static list of 11 named agent roles (Chief Orchestrator, AI Twin, UI/UX Design, Brand & Compliance, SEO/GEO/AEO, Market Research, Competitor Intel, YouTube Research, Content Strategy, Template Architect, MiniMax Multimodal).
+- **AI types** — `src/lib/ai/types.ts`. The `AiRequest` / `AiResponse` contract every caller speaks.
+- **Provider abstraction** — `src/lib/ai/provider.ts`. Server-only. Selects between a demo response and the MiniMax path based on env. Includes a scope filter that rejects borrower-data or rate-quote requests before any provider is called.
+- **MiniMax placeholder** — `src/lib/ai/minimax.ts`. Server-only. **Does not make any real network call** until the TODO checklist inside it is complete.
+- **API route** — `POST /api/ai/generate`. Validates the request body, dispatches to the provider, returns a typed `AiResponse`. `GET /api/ai/generate` returns route metadata for sanity-checking.
+- **Plan + docs** — `docs/AGENT_SYSTEM_PLAN.md` (architecture), `skills/README.md` (skill files), `knowledge/README.md` (reference docs), `netlify/ENVIRONMENT_VARIABLES.md` (what to paste into Netlify).
+
+### Required environment variables
+
+Server-side only. **Never** use a `NEXT_PUBLIC_` prefix on any of these — that would bake the secret into the browser bundle. Full list in [`.env.example`](./.env.example) and [`netlify/ENVIRONMENT_VARIABLES.md`](./netlify/ENVIRONMENT_VARIABLES.md):
+
+```
+AI_PROVIDER                            # `demo` or `minimax`
+AI_FEATURES_ENABLED                    # `true` to route to a live provider
+AI_DRAFTS_REQUIRE_REVIEW               # keep `true` for the pilot
+AI_IMAGE_GENERATION_ENABLED            # default `false`
+AI_VIDEO_PROMPT_GENERATION_ENABLED     # default `false`
+AI_DEBUG_LOGS                          # default `false`
+
+MINIMAX_API_KEY                        # encrypted; server-side only
+MINIMAX_BASE_URL                       # verify against MiniMax docs
+MINIMAX_TEXT_MODEL                     # verify on the account
+MINIMAX_IMAGE_MODEL                    # verify on the account
+MINIMAX_VIDEO_MODEL                    # verify on the account
+```
+
+### What is intentionally NOT done yet
+
+- No live network call to MiniMax. The provider returns a clearly labeled placeholder until the `TODO(minimax-live-wiring)` checklist in `src/lib/ai/minimax.ts` is resolved.
+- No UI button calls `/api/ai/generate` yet. The provider abstraction has to stabilize first.
+- No image or video generation. The per-task flags default to `false`.
+
+When you're ready to flip MiniMax live, walk through the steps in [`docs/AGENT_SYSTEM_PLAN.md`](./docs/AGENT_SYSTEM_PLAN.md#going-live-with-minimax) and verify each TODO in `minimax.ts` against the current official MiniMax docs. Do not guess endpoints, models, or payload shapes — read the docs.
+
+---
+
 ## Deployment
 
 The app is a standard Next.js 16 application and deploys cleanly to **Vercel**, **Netlify**, or any Node 20+ host.
