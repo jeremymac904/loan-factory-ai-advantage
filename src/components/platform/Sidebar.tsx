@@ -8,6 +8,7 @@ import {
   Bot,
   CalendarDays,
   ClipboardCheck,
+  Crown,
   GraduationCap,
   Globe,
   Inbox,
@@ -37,6 +38,7 @@ const items = [
   { href: '/compliance', label: 'Compliance', icon: ClipboardCheck },
   { href: '/admin', label: 'Admin', icon: ShieldCheck },
   { href: '/admin/intake', label: 'Admin Intake', icon: Inbox },
+  { href: '/owner', label: 'Owner', icon: Crown },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 

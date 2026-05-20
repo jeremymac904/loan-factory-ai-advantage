@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   ArrowRight,
+  Check,
   Copy,
   Eye,
   Globe,
@@ -35,6 +36,45 @@ export default function TemplatesExamplesPage() {
   const [activeKind, setActiveKind] = useState<BuilderKind | null>(null);
   const [activeLanguage, setActiveLanguage] = useState<'English' | 'Spanish' | null>(null);
 
+  // Real demo-mode state for template actions.
+  const [previewTemplate, setPreviewTemplate] = useState<BuilderTemplate | null>(null);
+  const [clonedIds, setClonedIds] = useState<Set<string>>(new Set());
+  const [submittedIds, setSubmittedIds] = useState<Set<string>>(new Set());
+  const [sharedIds, setSharedIds] = useState<Set<string>>(new Set());
+  const [toast, setToast] = useState<string | null>(null);
+
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2400);
+  }
+
+  function cloneTemplate(t: BuilderTemplate) {
+    setClonedIds((prev) => {
+      const next = new Set(prev);
+      next.add(t.id);
+      return next;
+    });
+    showToast(`"${t.title}" cloned into your drafts. Open Builder to personalize.`);
+  }
+
+  function shareTemplate(t: BuilderTemplate) {
+    setSharedIds((prev) => {
+      const next = new Set(prev);
+      next.add(t.id);
+      return next;
+    });
+    showToast(`Shared "${t.title}" with your team library.`);
+  }
+
+  function submitTemplate(t: BuilderTemplate) {
+    setSubmittedIds((prev) => {
+      const next = new Set(prev);
+      next.add(t.id);
+      return next;
+    });
+    showToast(`"${t.title}" submitted for Marketing review.`);
+  }
+
   const filtered = useMemo(() => {
     return builderTemplates.filter((t) => {
       if (activeKind && t.kind !== activeKind) return false;
@@ -44,10 +84,6 @@ export default function TemplatesExamplesPage() {
   }, [activeKind, activeLanguage]);
 
   const leaders = getPublishedTeamLeaders();
-
-  function flash(action: string, t: BuilderTemplate) {
-    console.info(`[demo] ${action}`, t.id);
-  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -204,31 +240,43 @@ export default function TemplatesExamplesPage() {
                     <div className="mt-auto flex flex-wrap items-center gap-2 pt-3 border-t border-[var(--color-lf-border)]">
                       <button
                         type="button"
-                        onClick={() => flash('preview', t)}
+                        onClick={() => setPreviewTemplate(t)}
                         className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-lf-black)] bg-[var(--color-lf-surface)] hover:bg-gray-100 px-2.5 py-1.5 rounded-lg border border-[var(--color-lf-border)]"
                       >
                         <Eye size={13} /> Preview
                       </button>
-                      <Link
-                        href={`/builder?template=${t.id}`}
-                        onClick={() => flash('clone', t)}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-white bg-[var(--color-lf-orange)] hover:bg-[var(--color-lf-orange-dark)] px-3 py-1.5 rounded-lg"
-                      >
-                        <Copy size={13} /> Clone
-                      </Link>
                       <button
                         type="button"
-                        onClick={() => flash('share', t)}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-lf-muted)] hover:text-[var(--color-lf-black)] px-2 py-1.5"
+                        onClick={() => cloneTemplate(t)}
+                        className={`inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg ${
+                          clonedIds.has(t.id)
+                            ? 'bg-green-50 text-green-700 border border-green-100'
+                            : 'text-white bg-[var(--color-lf-orange)] hover:bg-[var(--color-lf-orange-dark)]'
+                        }`}
                       >
-                        <Share2 size={13} /> Share
+                        <Copy size={13} /> {clonedIds.has(t.id) ? 'Cloned' : 'Clone'}
                       </button>
                       <button
                         type="button"
-                        onClick={() => flash('submit', t)}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-lf-muted)] hover:text-[var(--color-lf-black)] px-2 py-1.5 ml-auto"
+                        onClick={() => shareTemplate(t)}
+                        className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1.5 ${
+                          sharedIds.has(t.id)
+                            ? 'text-green-700'
+                            : 'text-[var(--color-lf-muted)] hover:text-[var(--color-lf-black)]'
+                        }`}
                       >
-                        <Send size={13} /> Submit
+                        <Share2 size={13} /> {sharedIds.has(t.id) ? 'Shared' : 'Share'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => submitTemplate(t)}
+                        className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1.5 ml-auto ${
+                          submittedIds.has(t.id)
+                            ? 'text-[var(--color-lf-orange-dark)]'
+                            : 'text-[var(--color-lf-muted)] hover:text-[var(--color-lf-black)]'
+                        }`}
+                      >
+                        <Send size={13} /> {submittedIds.has(t.id) ? 'In review' : 'Submit'}
                       </button>
                     </div>
                   </div>
@@ -320,6 +368,117 @@ export default function TemplatesExamplesPage() {
           Start Building <ArrowRight size={16} />
         </Link>
       </div>
+
+      {/* Preview modal */}
+      {previewTemplate && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setPreviewTemplate(null)}
+        >
+          <div
+            className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Gradient header */}
+            <div
+              className={`px-7 py-6 text-white ${
+                previewTemplate.accent === 'orange'
+                  ? 'bg-gradient-to-br from-[var(--color-lf-orange)] to-[var(--color-lf-orange-dark)]'
+                  : previewTemplate.accent === 'black'
+                  ? 'bg-gradient-to-br from-[var(--color-lf-black)] to-[#2b2b2b]'
+                  : 'bg-gradient-to-br from-gray-500 to-gray-700'
+              }`}
+            >
+              <span className="text-[10px] font-bold uppercase tracking-widest opacity-90">
+                {previewTemplate.kind.replace(/-/g, ' ')}
+              </span>
+              <h3 className="text-2xl font-black tracking-tight mt-1">{previewTemplate.title}</h3>
+              <p className="text-sm opacity-90 mt-2 max-w-xl leading-relaxed">
+                {previewTemplate.description}
+              </p>
+            </div>
+            <div className="px-7 py-6 space-y-5">
+              {/* What's inside */}
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-lf-muted)] mb-2">
+                  What&apos;s inside
+                </p>
+                <ul className="grid sm:grid-cols-2 gap-2 text-sm">
+                  {[
+                    'Hero with headshot, name, NMLS',
+                    'Bio + service-area block',
+                    'Specialty cards + language badges',
+                    'Reviews / social proof slot',
+                    'Contact form (demo only)',
+                    'Equal Housing Lender footer',
+                  ].map((line) => (
+                    <li
+                      key={line}
+                      className="flex items-start gap-2 text-[var(--color-lf-black)]"
+                    >
+                      <Check size={12} className="text-[var(--color-lf-orange)] mt-1 shrink-0" />
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Compliance flags */}
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-lf-muted)] mb-2">
+                  Compliance
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--color-lf-surface)] text-[var(--color-lf-muted)] border border-[var(--color-lf-border)]">
+                    {previewTemplate.language}
+                  </span>
+                  <span
+                    className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                      previewTemplate.compliance_status === 'pre-approved'
+                        ? 'bg-green-50 text-green-700 border-green-100'
+                        : previewTemplate.compliance_status === 'needs-personalization'
+                        ? 'bg-amber-50 text-amber-700 border-amber-100'
+                        : 'bg-purple-50 text-purple-700 border-purple-100'
+                    }`}
+                  >
+                    {previewTemplate.compliance_status.replace(/-/g, ' ')}
+                  </span>
+                  <span className="text-[10px] text-[var(--color-lf-muted)]">
+                    Loan Factory NMLS #320841 · Equal Housing Lender baked in
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--color-lf-border)]">
+                <button
+                  type="button"
+                  onClick={() => setPreviewTemplate(null)}
+                  className="text-sm font-semibold text-[var(--color-lf-muted)] hover:text-[var(--color-lf-black)] px-3 py-2"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    cloneTemplate(previewTemplate);
+                    setPreviewTemplate(null);
+                  }}
+                  className="inline-flex items-center gap-1.5 bg-[var(--color-lf-orange)] hover:bg-[var(--color-lf-orange-dark)] text-white text-sm font-bold px-4 py-2 rounded-lg shadow-sm shadow-[var(--color-lf-orange)]/20"
+                >
+                  <Copy size={13} /> Clone this template
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-[var(--color-lf-black)] text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-2xl max-w-md text-center">
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

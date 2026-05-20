@@ -119,18 +119,68 @@ const KITS: TrainingKit[] = [
   },
 ];
 
-export default function TrainingPage() {
-  const [created, setCreated] = useState<Set<string>>(new Set());
-  const [busy, setBusy] = useState<string | null>(null);
+interface CreatedKit {
+  id: string;
+  source_kit_id: string;
+  title: string;
+  format: string;
+  audience: string;
+  goal: string;
+  assets: string[];
+  followUps: string[];
+  status: 'Draft' | 'Customized' | 'Assigned' | 'Needs Marketing Review';
+  created_at: string;
+}
 
-  function createKit(id: string) {
-    setBusy(id);
+export default function TrainingPage() {
+  const [createdKits, setCreatedKits] = useState<CreatedKit[]>([]);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [previewKit, setPreviewKit] = useState<TrainingKit | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  function flash(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2400);
+  }
+
+  function createKit(kit: TrainingKit) {
+    setBusy(kit.id);
     // TODO(supabase): insert into training_kits with status='draft' + assigned reviewer.
     setTimeout(() => {
-      setCreated((prev) => new Set(prev).add(id));
+      const newKit: CreatedKit = {
+        id: `ck_${kit.id}_${Date.now().toString(36)}`,
+        source_kit_id: kit.id,
+        title: kit.title,
+        format: kit.format,
+        audience: kit.audience,
+        goal: kit.goal,
+        assets: [
+          'Slide deck',
+          'Email invite copy',
+          'Landing page (template)',
+          'Social post copy',
+          'Follow-up email',
+          'Short video script',
+          'Realtor / partner invite message',
+          'Compliance checklist',
+        ],
+        followUps: kit.followUps,
+        status: 'Draft',
+        created_at: new Date().toISOString(),
+      };
+      setCreatedKits((prev) => [newKit, ...prev]);
       setBusy(null);
+      flash(`"${kit.title}" kit created in your workspace.`);
     }, 700);
   }
+
+  function updateCreatedStatus(id: string, status: CreatedKit['status'], msg: string) {
+    setCreatedKits((prev) => prev.map((k) => (k.id === id ? { ...k, status } : k)));
+    flash(msg);
+  }
+
+  const wasCreated = (kitId: string) =>
+    createdKits.some((k) => k.source_kit_id === kitId);
 
   return (
     <>
@@ -142,7 +192,7 @@ export default function TrainingPage() {
       <div className="px-5 sm:px-8 py-8 space-y-6">
         <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {KITS.map((kit) => {
-            const wasCreated = created.has(kit.id);
+            const cardCreated = wasCreated(kit.id);
             return (
               <article
                 key={kit.id}
@@ -193,26 +243,33 @@ export default function TrainingPage() {
                     ))}
                   </ul>
 
-                  <div className="mt-auto flex items-center gap-2 pt-3 border-t border-gray-50">
+                  <div className="mt-auto flex items-center gap-2 pt-3 border-t border-gray-50 flex-wrap">
                     <button
                       type="button"
-                      onClick={() => createKit(kit.id)}
-                      disabled={busy === kit.id || wasCreated}
+                      onClick={() => setPreviewKit(kit)}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-lf-black)] bg-[var(--color-lf-surface)] hover:bg-gray-100 px-2.5 py-1.5 rounded-lg border border-[var(--color-lf-border)]"
+                    >
+                      Preview
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => createKit(kit)}
+                      disabled={busy === kit.id || cardCreated}
                       className={`inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ${
-                        wasCreated
+                        cardCreated
                           ? 'bg-green-50 text-green-700 border border-green-100'
                           : 'text-white bg-[var(--color-lf-orange)] hover:bg-[var(--color-lf-orange-dark)] disabled:bg-gray-300'
                       }`}
                     >
-                      {wasCreated ? (
+                      {cardCreated ? (
                         <>
-                          <Sparkles size={12} /> Kit created
+                          <Sparkles size={12} /> In your kits
                         </>
                       ) : busy === kit.id ? (
                         'Creating…'
                       ) : (
                         <>
-                          <ClipboardCopy size={12} /> Create Training Kit
+                          <ClipboardCopy size={12} /> Create Kit
                         </>
                       )}
                     </button>
@@ -225,6 +282,105 @@ export default function TrainingPage() {
             );
           })}
         </section>
+
+        {/* My Created Kits */}
+        {createdKits.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-[var(--color-lf-muted)]">
+                My Created Kits
+              </h2>
+              <span className="text-[11px] text-[var(--color-lf-muted)]">
+                {createdKits.length} kit{createdKits.length === 1 ? '' : 's'} in your workspace
+              </span>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {createdKits.map((ck) => (
+                <article
+                  key={ck.id}
+                  className="bg-white border border-[var(--color-lf-border)] rounded-2xl p-5 flex flex-col"
+                >
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <span
+                      className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${
+                        ck.status === 'Needs Marketing Review'
+                          ? 'bg-[var(--color-lf-orange-soft)] text-[var(--color-lf-orange-dark)] border-orange-100'
+                          : ck.status === 'Assigned'
+                          ? 'bg-blue-50 text-blue-700 border-blue-100'
+                          : ck.status === 'Customized'
+                          ? 'bg-amber-50 text-amber-700 border-amber-100'
+                          : 'bg-gray-100 text-gray-700 border-gray-200'
+                      }`}
+                    >
+                      {ck.status}
+                    </span>
+                    <span className="text-[10px] text-[var(--color-lf-muted)]">
+                      {ck.format} ·{' '}
+                      {new Date(ck.created_at).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </span>
+                  </div>
+                  <p className="text-sm font-bold text-[var(--color-lf-black)] leading-tight mb-1">
+                    {ck.title}
+                  </p>
+                  <p className="text-[11px] text-[var(--color-lf-muted)] mb-3">
+                    For {ck.audience.toLowerCase()}
+                  </p>
+
+                  <details className="text-[11px] mb-3 [&>summary]:cursor-pointer [&>summary]:text-[var(--color-lf-orange-dark)] [&>summary]:font-bold">
+                    <summary>View {ck.assets.length} assets included</summary>
+                    <ul className="space-y-1 mt-2 text-[var(--color-lf-muted)]">
+                      {ck.assets.map((a) => (
+                        <li key={a} className="flex items-start gap-2">
+                          <FileText size={10} className="mt-0.5 text-[var(--color-lf-orange)]" />
+                          <span>{a}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+
+                  <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-3 border-t border-gray-50">
+                    {ck.status === 'Draft' && (
+                      <button
+                        type="button"
+                        onClick={() => updateCreatedStatus(ck.id, 'Customized', 'Kit marked customized')}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-lf-black)] bg-[var(--color-lf-surface)] hover:bg-gray-100 px-2.5 py-1.5 rounded-lg border border-[var(--color-lf-border)]"
+                      >
+                        Customize
+                      </button>
+                    )}
+                    {ck.status !== 'Needs Marketing Review' && ck.status !== 'Assigned' && (
+                      <button
+                        type="button"
+                        onClick={() => updateCreatedStatus(ck.id, 'Assigned', 'Assigned to your team')}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-lf-black)] bg-[var(--color-lf-surface)] hover:bg-gray-100 px-2.5 py-1.5 rounded-lg border border-[var(--color-lf-border)]"
+                      >
+                        Assign to Team
+                      </button>
+                    )}
+                    {ck.status !== 'Needs Marketing Review' && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateCreatedStatus(
+                            ck.id,
+                            'Needs Marketing Review',
+                            'Submitted for Marketing review',
+                          )
+                        }
+                        className="inline-flex items-center gap-1 text-xs font-bold text-white bg-[var(--color-lf-orange)] hover:bg-[var(--color-lf-orange-dark)] px-3 py-1.5 rounded-lg ml-auto"
+                      >
+                        Submit for Review
+                      </button>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="bg-[var(--color-lf-orange-soft)] border border-orange-100 rounded-3xl p-8 text-center">
           <h2 className="text-2xl font-black text-[var(--color-lf-black)] tracking-tight mb-2">
@@ -241,6 +397,95 @@ export default function TrainingPage() {
           </a>
         </section>
       </div>
+
+      {/* Preview modal */}
+      {previewKit && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setPreviewKit(null)}
+        >
+          <div
+            className="bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-gradient-to-br from-[var(--color-lf-orange)] to-[var(--color-lf-orange-dark)] px-7 py-6 text-white">
+              <span className="text-[10px] font-bold uppercase tracking-widest opacity-90">
+                {previewKit.format} · {previewKit.length}
+              </span>
+              <h3 className="text-xl font-black tracking-tight mt-1">{previewKit.title}</h3>
+              <p className="text-sm opacity-90 mt-2 leading-relaxed">{previewKit.goal}</p>
+            </div>
+            <div className="px-7 py-6 space-y-5">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-lf-muted)] mb-2">
+                  Audience
+                </p>
+                <p className="text-sm text-[var(--color-lf-black)]">{previewKit.audience}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-lf-muted)] mb-2">
+                  Included assets
+                </p>
+                <ul className="space-y-1 text-sm">
+                  {previewKit.includes.map((inc) => (
+                    <li
+                      key={inc}
+                      className="flex items-start gap-2 text-[var(--color-lf-black)]"
+                    >
+                      <FileText size={11} className="mt-1 text-[var(--color-lf-orange)]" />
+                      {inc}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-lf-muted)] mb-2">
+                  Follow-ups
+                </p>
+                <ul className="space-y-1 text-sm">
+                  {previewKit.followUps.map((f) => (
+                    <li
+                      key={f}
+                      className="flex items-start gap-2 text-[var(--color-lf-black)]"
+                    >
+                      <ArrowRight size={11} className="mt-1 text-[var(--color-lf-orange)]" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[var(--color-lf-border)]">
+                <button
+                  type="button"
+                  onClick={() => setPreviewKit(null)}
+                  className="text-sm font-semibold text-[var(--color-lf-muted)] hover:text-[var(--color-lf-black)] px-3 py-2"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    createKit(previewKit);
+                    setPreviewKit(null);
+                  }}
+                  disabled={wasCreated(previewKit.id)}
+                  className="inline-flex items-center gap-1.5 bg-[var(--color-lf-orange)] hover:bg-[var(--color-lf-orange-dark)] disabled:bg-gray-300 text-white text-sm font-bold px-4 py-2 rounded-lg shadow-sm shadow-[var(--color-lf-orange)]/20"
+                >
+                  <ClipboardCopy size={13} />{' '}
+                  {wasCreated(previewKit.id) ? 'Already in your kits' : 'Create kit'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-[var(--color-lf-black)] text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-2xl max-w-md text-center">
+          {toast}
+        </div>
+      )}
     </>
   );
 }

@@ -9,10 +9,8 @@ import { AI_ADVANTAGE_LOGO } from '@/lib/brand-assets';
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/request-access', label: 'Request Access' },
-  { href: '/builder', label: 'Builder' },
   { href: '/templates-examples', label: 'Templates' },
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/admin', label: 'Admin' },
+  { href: '/login', label: 'Login' },
 ];
 
 function Logo() {
